@@ -1,0 +1,8 @@
+# Dữ liệu nhân sự và PIN — KHÔNG đưa lên GitHub
+*.xlsx
+*.xls
+*.csv
+~$*
+desktop.ini
+Thumbs.db
+.claude/

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0093DD">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Lịch nghỉ phép PEC – Portcoast</title>
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/logo.png" alt="Portcoast" class="logo">
+      <div class="app-title"><strong>Lịch nghỉ phép</strong><span id="unitName"></span></div>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Chức năng"></nav>
+    <button class="user-chip" id="userChip" type="button" hidden></button>
+  </header>
+  <div id="demoBanner" class="demo-banner" hidden>
+    Đang chạy <b>bản demo</b> với dữ liệu giả. Đăng nhập: <code>NS01</code> … <code>NS12</code>, PIN <code>111111</code>
+  </div>
+
+  <main id="main">
+    <section class="view" id="view-calendar"></section>
+    <section class="view" id="view-form" hidden></section>
+    <section class="view" id="view-approve" hidden></section>
+    <section class="view" id="view-summary" hidden></section>
+    <section class="view" id="view-me" hidden></section>
+  </main>
+
+  <div class="overlay" id="login" hidden>
+    <form class="login-card" id="loginForm" autocomplete="on">
+      <img src="assets/logo.png" alt="Portcoast" class="login-logo">
+      <h1>Lịch nghỉ phép</h1>
+      <p class="muted" id="loginUnit"></p>
+      <label>Mã nhân viên
+        <input name="ma" id="loginMa" autocomplete="username" autocapitalize="characters" required placeholder="VD: NS05">
+      </label>
+      <label>Mã PIN
+        <input name="pin" id="loginPin" type="password" inputmode="numeric" autocomplete="current-password" required placeholder="••••••">
+      </label>
+      <button class="btn primary block" type="submit" id="loginBtn">Đăng nhập</button>
+      <p class="err" id="loginErr"></p>
+      <p class="muted small">Chưa có mã? Liên hệ quản trị viên của Trung tâm.</p>
+    </form>
+  </div>
+
+  <div class="overlay" id="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true">
+      <button class="sheet-close" type="button" data-close aria-label="Đóng">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/logic.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
