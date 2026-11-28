@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Hướng dẫn sử dụng – Lịch nghỉ phép PEC</title>
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<style>
+:root{--brand:#0093DD;--brand-d:#006FA8;--line:#E2E8F0;--muted:#64748B;--mk:#E11D48;--bg:#F3F6F9}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;font:15px/1.55 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:#0F172A;background:var(--bg)}
+a{color:var(--brand-d)}code{background:#E8F4FB;color:#035c8a;padding:1px 6px;border-radius:5px;font-size:.92em}
+.muted{color:var(--muted)}
+header.top{background:#fff;border-bottom:3px solid var(--brand);position:sticky;top:0;z-index:20}
+.top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 18px}
+.top-in img{height:30px}.top-in .t{border-left:1px solid var(--line);padding-left:14px;line-height:1.2}
+.top-in .t b{display:block;font-size:16px}.top-in .t span{font-size:12px;color:var(--muted)}
+.top-in .go{margin-left:auto;background:var(--brand);color:#fff;text-decoration:none;font-weight:600;padding:8px 14px;border-radius:10px;white-space:nowrap}
+main{max-width:1180px;margin:0 auto;padding:18px}
+.hero{background:linear-gradient(135deg,#0093DD,#006FA8);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:16px}
+.hero h1{margin:0 0 6px;font-size:26px}.hero p{margin:0;opacity:.92}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+nav.toc a{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;text-decoration:none;color:#0F172A;font-size:14px;font-weight:600}
+nav.toc a:hover{border-color:var(--brand);color:var(--brand-d)}
+section{background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(15,23,42,.06);padding:20px 22px;margin-bottom:18px;scroll-margin-top:70px}
+section h2{margin:0 0 8px;font-size:21px;color:var(--brand-d)}section h3{margin:18px 0 10px;font-size:16px}
+.cols{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px;margin-top:14px}
+.col-h{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--brand-d);border-bottom:2px solid #E8F4FB;padding-bottom:6px;margin-bottom:12px}
+.col-h svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.shot{position:relative;display:block;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.shot img{display:block;width:100%;height:auto}
+.shot[style]{margin:0 auto}
+.cols.eq{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.shot.mob{max-width:320px;margin:0 auto;border-radius:22px;border:6px solid #1E293B}
+.mk{position:absolute;border:3px solid var(--mk);border-radius:8px;box-shadow:0 0 0 3px rgba(225,29,72,.18);pointer-events:none}
+.mk b,.n{position:absolute;top:-13px;left:-13px;width:24px;height:24px;border-radius:50%;background:var(--mk);color:#fff;font:700 13px/24px "Segoe UI",Arial,sans-serif;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:12px 0 0}
+.steps li{counter-increment:s;position:relative;padding:4px 0 4px 34px;margin:2px 0}
+.steps li::before{content:counter(s);position:absolute;left:0;top:4px;width:24px;height:24px;border-radius:50%;background:var(--mk);color:#fff;font-weight:700;font-size:13px;line-height:24px;text-align:center}
+.feat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.feat div{border:1px solid var(--line);border-radius:12px;padding:10px 12px}.feat b{display:block}.feat span{color:var(--muted);font-size:14px}
+table.roles{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
+.roles th,.roles td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.roles th{color:var(--muted);font-size:12px;text-transform:uppercase}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;margin:8px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:16px;height:16px;border-radius:4px;display:inline-block}
+.legend .sw-p{background:repeating-linear-gradient(45deg,#0093DD 0 3px,#fff 3px 6px);border:1px solid #0093DD}
+.legend .sw-h{background:linear-gradient(90deg,#0093DD 50%,#fff 50%);border:1px solid #0093DD}
+.faq dt{font-weight:700;margin-top:10px}.faq dd{margin:2px 0 0}
+/* Hình minh hoạ cài đặt */
+.ring{position:relative;outline:3px solid var(--mk);outline-offset:2px;border-radius:6px}
+.ring>.n{top:-14px;left:auto;right:-14px}
+.mock{border:1px solid var(--line);border-radius:12px;background:#F8FAFC;padding:12px;font-size:13px;position:relative}
+.browser .bbar{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.browser .url{flex:1;background:#F1F5F9;border-radius:999px;padding:4px 12px;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dots3 i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#CBD5E1;margin-right:4px}
+.ico{display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center}.ico svg{width:18px;height:18px;fill:#334155}
+.menu{margin:10px 0 0 auto;width:270px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 20px rgba(15,23,42,.12);padding:6px}
+.menu>div,.sub>div{padding:6px 10px}.menu .sep{height:1px;background:var(--line);padding:0;margin:4px 0}
+.menu .sub{margin:4px 0 4px 26px;border-left:2px solid var(--line)}
+.dlg{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;max-width:340px;box-shadow:0 8px 20px rgba(15,23,42,.1)}
+.dlg-h{font-weight:700;margin-bottom:10px}.dlg-r{display:flex;align-items:center;gap:10px;margin-bottom:10px}.dlg label{display:inline-block;padding:2px 6px}
+.dlg-b{display:flex;justify-content:flex-end;gap:10px;margin-top:10px}.dlg-b span{padding:6px 14px;border-radius:8px;border:1px solid var(--line)}
+.dlg-b .pri{background:var(--brand);color:#fff;border-color:var(--brand)}
+.inp{border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:#fff}
+.appicon{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:#fff}
+.desk{display:flex;gap:14px;align-items:center;background:linear-gradient(135deg,#1E3A5F,#0F5C8C);color:#fff}
+.desk p{margin:0;font-size:14px}.desk a{color:#BDE6FB}
+.desk-ic{display:flex;flex-direction:column;align-items:center;gap:4px;width:92px;flex:none;font-size:12px;text-align:center}.desk-ic .appicon{width:56px;height:56px}
+.phones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.phone{border:5px solid #1E293B;border-radius:22px;background:#1E293B;aspect-ratio:9/16;overflow:visible}
+.scr{position:relative;height:100%;background:#fff;border-radius:16px;font-size:11px;display:flex;flex-direction:column}
+.p-top{background:#F1F5F9;margin:8px;border-radius:999px;padding:4px 8px;text-align:center;color:#334155;font-size:10px}
+.p-top.a{display:flex;justify-content:space-between;align-items:center;border-radius:8px}
+.dot3{display:inline-flex}.dot3 svg{width:14px;height:14px;fill:#334155}
+.p-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--brand-d)}.p-body b{font-size:13px}.p-body span{color:var(--muted)}
+.p-bar{display:flex;justify-content:space-around;align-items:center;border-top:1px solid var(--line);padding:8px 4px;font-size:14px;color:#334155}
+.p-bar .sh{display:inline-flex;color:var(--brand)}.p-bar svg{width:18px;height:18px}
+.sheet-ios{background:#CBD5E1;justify-content:flex-end}
+.p-sheet{background:#fff;border-radius:12px;margin:8px;padding:4px}.p-sheet .row{padding:7px 8px;border-bottom:1px solid #F1F5F9;display:flex;justify-content:space-between}
+.p-nav{display:flex;justify-content:space-between;align-items:center;padding:10px 6px;border-bottom:1px solid var(--line);gap:4px;font-size:10px}.p-nav b{font-size:9px;text-align:center}
+.p-nav .add{color:var(--brand);font-weight:700;padding:0 4px}
+.p-add{display:flex;align-items:center;gap:8px;padding:12px 8px}.p-add small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+.p-add .appicon{width:38px;height:38px}.p-add .inp{font-size:10px}
+.p-menu{margin:0 8px 0 auto;width:85%;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 16px rgba(15,23,42,.15);padding:4px}
+.p-menu div{padding:6px}
+.scr.dim{background:#94A3B8;justify-content:center}
+.p-dlg{background:#fff;border-radius:12px;margin:10px;padding:10px}.p-dlg .dlg-b span{padding:3px 8px;font-size:10px}
+.scr.home{background:linear-gradient(160deg,#0B4F7C,#1E293B);padding:14px 10px}
+.hgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.hgrid i{aspect-ratio:1;border-radius:9px;background:rgba(255,255,255,.18)}
+.hic{display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;font-size:7px;line-height:1.1;text-align:center;outline:3px solid var(--mk);outline-offset:2px;border-radius:9px;min-width:0}
+.hic span{overflow-wrap:anywhere}
+.hic .appicon{width:100%;height:auto;aspect-ratio:1;border-radius:9px}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 0 30px}
+@media (max-width:900px){
+  .cols{grid-template-columns:1fr}.col.mob{order:-1}
+  .feat{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  main{padding:10px}section{padding:16px 14px;border-radius:12px}.hero{padding:18px}.hero h1{font-size:21px}
+  .top-in .t span{display:none}.feat{grid-template-columns:1fr}
+  .roles th:nth-child(2),.roles td:nth-child(2){display:none}
+  .phones{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.scr{font-size:9px}
+}
+@media print{header.top,nav.toc{display:none}section{break-inside:avoid;box-shadow:none;border:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><img src="../assets/logo.png" alt="Portcoast"><div class="t"><b>Hướng dẫn sử dụng</b><span>Lịch nghỉ phép – Trung tâm PEC</span></div>
+<a class="go" href="../">Mở ứng dụng →</a></div></header>
+<main>
+<div class="hero"><h1>Hướng dẫn sử dụng Lịch nghỉ phép PEC</h1>
+<p>Mỗi mục có 2 cột: <b>Trên máy tính</b> và <b>Trên điện thoại</b>. Ô khoanh đỏ đánh số là chỗ cần bấm, giải thích theo số ở bên dưới ảnh. Bấm vào ảnh để xem cỡ lớn.</p></div>
+<nav class="toc"><a href="#gioi-thieu">Giới thiệu</a><a href="#dang-nhap">1. Đăng nhập</a><a href="#doi-mat-khau-lan-dau">2. Đổi mật khẩu lần đầu</a><a href="#lich-thang">3. Lịch tháng</a><a href="#khai-nghi">4. Khai nghỉ</a><a href="#duyet">5. Duyệt đơn (PGĐ, Giám đốc, Quản trị)</a><a href="#tong-ket">6. Tổng kết</a><a href="#ca-nhan">7. Cá nhân – đơn của tôi, đổi mật khẩu, đăng xuất</a><a href="#quan-tri">8. Quản trị (Quản trị viên, Giám đốc)</a><a href="#cai-dat">9. Đưa ứng dụng ra màn hình (lối tắt / nút app)</a><a href="#hoi-dap">10. Câu hỏi thường gặp</a></nav>
+<section id="gioi-thieu"><h2>Giới thiệu</h2>
+<p>Ứng dụng <b>Lịch nghỉ phép PEC</b> giúp mỗi người tự khai ngày nghỉ, lãnh đạo duyệt trên điện thoại hoặc máy tính, và cả Trung tâm biết hôm nay ai vắng mặt.</p>
+<div class="feat">
+  <div><b>📅 Lịch tháng</b><span>Ai nghỉ ngày nào, hôm nay ai vắng mặt.</span></div>
+  <div><b>➕ Khai nghỉ</b><span>Nghỉ phép, Công tác, Nghỉ không lương; cả ngày hoặc nửa ngày.</span></div>
+  <div><b>✅ Duyệt</b><span>PGĐ / Giám đốc duyệt hoặc từ chối đơn, có số đơn chờ.</span></div>
+  <div><b>📊 Tổng kết</b><span>Tổng hợp theo tháng, theo năm; xuất ra Excel.</span></div>
+  <div><b>👤 Cá nhân</b><span>Đơn của tôi, hủy đơn, đổi mật khẩu, đăng xuất.</span></div>
+  <div><b>🛡️ Quản trị</b><span>Thêm nhân sự, phân quyền, giao phòng cho PGĐ, đặt lại mật khẩu.</span></div>
+</div>
+<p>Địa chỉ: <a href="../">https://ngocdaika.github.io/nghi-phep-pec/</a> &nbsp;·&nbsp; Ngày làm việc: thứ 2 – thứ 7 (không tính chủ nhật và ngày lễ).</p>
+<table class="roles">
+<thead><tr><th>Vai trò</th><th>Xem được</th><th>Làm được</th></tr></thead>
+<tbody>
+<tr><td><b>Nhân viên</b></td><td>Hôm nay ai vắng mặt; lịch và tổng kết của chính mình</td><td>Khai đơn, hủy đơn đang chờ duyệt</td></tr>
+<tr><td><b>Trưởng / Phó phòng</b></td><td>Lịch và tổng kết của cả Trung tâm</td><td>Như nhân viên</td></tr>
+<tr><td><b>Phó Giám đốc</b></td><td>Như trên</td><td>Duyệt đơn của các phòng được giao phụ trách</td></tr>
+<tr><td><b>Giám đốc</b></td><td>Như trên, kèm lý do nghỉ</td><td>Duyệt mọi đơn; đổi vai trò, giao phòng cho PGĐ</td></tr>
+<tr><td><b>Quản trị</b></td><td>Tất cả</td><td>Toàn quyền: nhân sự, mật khẩu, loại nghỉ, ngày lễ</td></tr>
+</tbody></table>
+<p class="muted">Đơn của Nhân viên và Trưởng/Phó phòng do PGĐ phụ trách phòng duyệt (phòng chưa giao PGĐ thì Giám đốc duyệt). Đơn của PGĐ do Giám đốc duyệt. Lý do nghỉ chỉ người nghỉ, người duyệt và Giám đốc xem được.</p>
+</section>
+<section id="dang-nhap"><h2>1. Đăng nhập</h2>
+<p><b>Mã nhân sự</b> = tên + chữ đầu của họ và tên đệm, viết thường, không dấu. Ví dụ: Nguyễn Hoàng Khánh Ngọc → <code>ngoc.nhk</code>, Lê Vinh → <code>vinh.l</code>. Trùng mã thì thêm số (<code>ngoc.nhk2</code>). Lần đầu dùng mật khẩu <code>123456</code>.</p>
+<div class="cols"><div class="col web"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Trên máy tính</div><a class="shot" style="max-width:420px" href="img/web-login.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/web-login.png" alt="Màn hình đăng nhập trên máy tính" loading="lazy" width="420" height="528"><span class="mk" style="left:12.62%;top:39.20%;width:74.76%;height:9.09%"><b>1</b></span><span class="mk" style="left:12.62%;top:53.41%;width:74.76%;height:9.09%"><b>2</b></span><span class="mk" style="left:12.62%;top:63.26%;width:74.76%;height:5.30%"><b>3</b></span><span class="mk" style="left:12.62%;top:69.32%;width:74.76%;height:9.09%"><b>4</b></span></a><ol class="steps"><li>Nhập <b>mã nhân sự</b>.</li><li>Nhập <b>mật khẩu</b>.</li><li>Đánh dấu <b>Giữ đăng nhập 30 ngày</b> nếu là máy của riêng bạn (máy dùng chung thì bỏ trống).</li><li>Bấm <b>Đăng nhập</b>.</li></ol></div><div class="col mob"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>Trên điện thoại</div><a class="shot mob" href="img/mob-login.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/mob-login.png" alt="Màn hình đăng nhập trên điện thoại" loading="lazy" width="390" height="844"><span class="mk" style="left:10.00%;top:43.13%;width:80.00%;height:5.81%"><b>1</b></span><span class="mk" style="left:10.00%;top:52.13%;width:80.00%;height:5.81%"><b>2</b></span><span class="mk" style="left:10.00%;top:58.41%;width:80.00%;height:3.32%"><b>3</b></span><span class="mk" style="left:10.00%;top:62.20%;width:80.00%;height:5.69%"><b>4</b></span></a><ol class="steps"><li>Nhập <b>mã nhân sự</b>.</li><li>Nhập <b>mật khẩu</b>.</li><li>Đánh dấu <b>Giữ đăng nhập 30 ngày</b> để không phải đăng nhập lại.</li><li>Bấm <b>Đăng nhập</b>.</li></ol></div></div></section>
+<section id="doi-mat-khau-lan-dau"><h2>2. Đổi mật khẩu lần đầu</h2>
+<p>Lần đầu đăng nhập bằng mật khẩu mặc định, ứng dụng yêu cầu đặt mật khẩu riêng (6–32 ký tự, có thể dùng chữ và số). Không nên để mật khẩu toàn số giống nhau hay dãy liên tiếp.</p>
+<div class="cols"><div class="col web"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Trên máy tính</div><a class="shot" style="max-width:420px" href="img/web-first.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/web-first.png" alt="Đổi mật khẩu lần đầu trên máy tính" loading="lazy" width="420" height="528"><span class="mk" style="left:12.62%;top:47.54%;width:74.76%;height:9.09%"><b>1</b></span><span class="mk" style="left:12.62%;top:61.74%;width:74.76%;height:9.09%"><b>2</b></span><span class="mk" style="left:12.62%;top:71.59%;width:74.76%;height:9.09%"><b>3</b></span></a><ol class="steps"><li>Nhập <b>mật khẩu mới</b>.</li><li><b>Nhập lại</b> mật khẩu mới.</li><li>Bấm <b>Đổi mật khẩu và vào</b>.</li></ol></div><div class="col mob"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>Trên điện thoại</div><a class="shot mob" href="img/mob-first.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/mob-first.png" alt="Đổi mật khẩu lần đầu trên điện thoại" loading="lazy" width="390" height="844"><span class="mk" style="left:10.00%;top:48.34%;width:80.00%;height:5.81%"><b>1</b></span><span class="mk" style="left:10.00%;top:57.35%;width:80.00%;height:5.81%"><b>2</b></span><span class="mk" style="left:10.00%;top:63.63%;width:80.00%;height:5.69%"><b>3</b></span></a><ol class="steps"><li>Nhập <b>mật khẩu mới</b>.</li><li><b>Nhập lại</b> mật khẩu mới.</li><li>Bấm <b>Đổi mật khẩu và vào</b>.</li></ol></div></div></section>
+<section id="lich-thang"><h2>3. Lịch tháng</h2>
+<p>Màn hình chính. Mỗi dòng là một người, mỗi cột là một ngày; cột ngày hôm nay tô xanh. <b>Kéo ngang</b> trong bảng để xem các ngày khác, <b>kéo dọc</b> để cuộn trang (dòng ngày luôn nằm trên cùng).
+Nhân viên chỉ thấy dòng của mình và mục <b>Hôm nay vắng mặt</b>; Trưởng/Phó phòng trở lên thấy cả Trung tâm kèm cột tổng ngày nghỉ.</p>
+<div class="legend">
+<span><i style="background:#0093DD"></i>Nghỉ phép</span><span><i style="background:#10B981"></i>Công tác</span>
+<span><i style="background:#F97316"></i>Nghỉ không lương</span><span><i class="sw-p"></i>Chờ duyệt (ô sọc)</span>
+<span><i class="sw-h"></i>Nửa ngày (nửa ô)</span><span><i style="background:#EEF2F6;border:1px solid #CBD5E1"></i>Chủ nhật</span></div><div class="cols"><div class="col web"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Trên máy tính</div><a class="shot" href="img/web-calendar.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/web-calendar.png" alt="Lịch tháng trên máy tính" loading="lazy" width="1280" height="860"><span class="mk" style="left:1.17%;top:7.67%;width:28.44%;height:5.58%"><b>1</b></span><span class="mk" style="left:75.70%;top:7.56%;width:13.28%;height:5.70%"><b>2</b></span><span class="mk" style="left:1.17%;top:13.49%;width:23.98%;height:20.81%"><b>3</b></span><span class="mk" style="left:88.83%;top:7.67%;width:8.91%;height:5.58%"><b>4</b></span><span class="mk" style="left:1.17%;top:43.37%;width:15.62%;height:5.12%"><b>5</b></span><span class="mk" style="left:72.27%;top:43.37%;width:3.12%;height:5.12%"><b>6</b></span></a><ol class="steps"><li><b>◀ ▶</b> chuyển tháng, <b>Hôm nay</b> quay về tháng này.</li><li>Lọc theo <b>phòng</b>.</li><li><b>Hôm nay vắng mặt</b>: bấm tên để xem chi tiết.</li><li>Bấm <b>+ Khai nghỉ</b> để tạo đơn.</li><li>Bấm <b>tên</b> một người để xem các đơn của người đó trong năm.</li><li>Bấm <b>ô màu</b> để xem chi tiết ngày nghỉ.</li></ol></div><div class="col mob"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>Trên điện thoại</div><a class="shot mob" href="img/mob-calendar.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/mob-calendar.png" alt="Lịch tháng trên điện thoại" loading="lazy" width="390" height="1180"><span class="mk" style="left:1.28%;top:4.75%;width:93.59%;height:4.07%"><b>1</b></span><span class="mk" style="left:1.28%;top:8.64%;width:93.59%;height:4.75%"><b>2</b></span><span class="mk" style="left:1.28%;top:13.56%;width:93.59%;height:14.41%"><b>3</b></span><span class="mk" style="left:23.33%;top:95.00%;width:26.15%;height:5.00%"><b>4</b></span><span class="mk" style="left:1.28%;top:50.51%;width:32.82%;height:3.73%"><b>5</b></span></a><ol class="steps"><li><b>◀ ▶</b> chuyển tháng, <b>Hôm nay</b> quay về tháng này.</li><li>Chạm để chọn <b>phòng</b> cần xem.</li><li><b>Hôm nay vắng mặt</b>: chạm tên để xem chi tiết.</li><li>Thanh dưới cùng: chạm <b>Khai nghỉ</b> để tạo đơn.</li><li>Chạm <b>tên</b> để xem đơn của người đó; chạm <b>ô màu</b> để xem chi tiết. Vuốt ngang trong bảng để xem các ngày khác.</li></ol></div></div></section>
+<section id="khai-nghi"><h2>4. Khai nghỉ</h2>
+<p>Chủ nhật và ngày lễ tự bỏ qua. Nghỉ nửa ngày: chọn <b>Từ chiều</b> ở ngày đầu hoặc <b>Hết buổi sáng</b> ở ngày cuối. Đơn mới ở trạng thái <b>Chờ duyệt</b> (ô sọc trên lịch) cho đến khi được duyệt.</p>
+<div class="cols"><div class="col web"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Trên máy tính</div><a class="shot" href="img/web-form.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/web-form.png" alt="Khai nghỉ trên máy tính" loading="lazy" width="1280" height="860"><span class="mk" style="left:21.17%;top:15.81%;width:57.66%;height:5.70%"><b>1</b></span><span class="mk" style="left:21.17%;top:24.53%;width:57.66%;height:4.88%"><b>2</b></span><span class="mk" style="left:21.17%;top:32.56%;width:48.59%;height:10.58%"><b>3</b></span><span class="mk" style="left:21.17%;top:46.28%;width:57.66%;height:9.19%"><b>4</b></span><span class="mk" style="left:21.17%;top:56.28%;width:57.66%;height:12.79%"><b>5</b></span><span class="mk" style="left:21.17%;top:69.53%;width:57.66%;height:5.58%"><b>6</b></span></a><ol class="steps"><li>Chọn <b>loại</b>: Nghỉ phép, Công tác hoặc Nghỉ không lương.</li><li><b>Chọn nhanh</b>: cả ngày hôm nay, sáng nay, chiều nay, ngày mai.</li><li>Hoặc chọn <b>Từ ngày – Đến ngày</b> và buổi.</li><li>Ghi <b>lý do</b> (chỉ bạn, người duyệt và quản trị xem được).</li><li>Kiểm tra <b>số ngày nghỉ</b> và người sẽ duyệt.</li><li>Bấm <b>Gửi đơn nghỉ</b>.</li></ol></div><div class="col mob"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>Trên điện thoại</div><a class="shot mob" href="img/mob-form.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/mob-form.png" alt="Khai nghỉ trên điện thoại" loading="lazy" width="390" height="973"><span class="mk" style="left:5.38%;top:13.05%;width:89.23%;height:9.87%"><b>1</b></span><span class="mk" style="left:5.38%;top:25.59%;width:89.23%;height:8.22%"><b>2</b></span><span class="mk" style="left:5.38%;top:36.59%;width:89.23%;height:22.10%"><b>3</b></span><span class="mk" style="left:5.38%;top:61.46%;width:89.23%;height:9.35%"><b>4</b></span><span class="mk" style="left:5.38%;top:71.53%;width:89.23%;height:12.95%"><b>5</b></span><span class="mk" style="left:5.38%;top:84.89%;width:89.23%;height:4.93%"><b>6</b></span></a><ol class="steps"><li>Chọn <b>loại</b>.</li><li><b>Chọn nhanh</b> ngày phổ biến.</li><li>Hoặc chọn <b>Từ ngày – Đến ngày</b> và buổi.</li><li>Ghi <b>lý do</b>.</li><li>Kiểm tra <b>số ngày</b> và người duyệt.</li><li>Chạm <b>Gửi đơn nghỉ</b>.</li></ol></div></div></section>
+<section id="duyet"><h2>5. Duyệt đơn (PGĐ, Giám đốc, Quản trị)</h2>
+<p>Tab <b>Duyệt</b> chỉ hiện với người có quyền duyệt; số đỏ là số đơn đang chờ. Mỗi đơn kèm số ngày người đó đã nghỉ trong năm để tham khảo.</p>
+<div class="cols"><div class="col web"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Trên máy tính</div><a class="shot" href="img/web-approve.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/web-approve.png" alt="Duyệt đơn trên máy tính" loading="lazy" width="1280" height="860"><span class="mk" style="left:61.95%;top:0.35%;width:9.38%;height:5.23%"><b>1</b></span><span class="mk" style="left:82.58%;top:14.88%;width:7.19%;height:5.58%"><b>2</b></span><span class="mk" style="left:89.61%;top:14.88%;width:6.80%;height:5.58%"><b>3</b></span></a><ol class="steps"><li>Mở tab <b>Duyệt</b>.</li><li>Bấm <b>✓ Duyệt</b> để đồng ý.</li><li>Bấm <b>Từ chối</b> và ghi lý do (người nghỉ sẽ thấy).</li></ol></div><div class="col mob"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>Trên điện thoại</div><a class="shot mob" href="img/mob-approve.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/mob-approve.png" alt="Duyệt đơn trên điện thoại" loading="lazy" width="390" height="1100"><span class="mk" style="left:37.44%;top:94.64%;width:21.28%;height:5.36%"><b>1</b></span><span class="mk" style="left:5.38%;top:22.64%;width:23.59%;height:4.36%"><b>2</b></span><span class="mk" style="left:28.46%;top:22.64%;width:22.31%;height:4.36%"><b>3</b></span></a><ol class="steps"><li>Chạm tab <b>Duyệt</b> ở thanh dưới.</li><li>Chạm <b>✓ Duyệt</b>.</li><li>Chạm <b>Từ chối</b> và ghi lý do.</li></ol></div></div></section>
+<section id="tong-ket"><h2>6. Tổng kết</h2>
+<p>Tổng ngày nghỉ theo tháng hoặc năm, theo từng loại, từng người. Công tác được đếm riêng, không cộng vào ngày nghỉ. Nhân viên chỉ thấy số liệu của mình.</p>
+<div class="cols"><div class="col web"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Trên máy tính</div><a class="shot" href="img/web-summary.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/web-summary.png" alt="Tổng kết trên máy tính" loading="lazy" width="1280" height="860"><span class="mk" style="left:1.25%;top:7.79%;width:19.61%;height:5.23%"><b>1</b></span><span class="mk" style="left:20.78%;top:7.67%;width:20.94%;height:5.58%"><b>2</b></span><span class="mk" style="left:56.80%;top:7.56%;width:13.28%;height:5.70%"><b>3</b></span><span class="mk" style="left:69.92%;top:7.67%;width:27.73%;height:5.58%"><b>4</b></span></a><ol class="steps"><li>Chọn <b>Tổng kết tháng</b> hoặc <b>Tổng kết năm</b>.</li><li><b>◀ ▶</b> chuyển tháng / năm.</li><li>Lọc theo <b>phòng</b>.</li><li><b>Xuất</b> bảng tổng hợp hoặc danh sách đơn ra file CSV, mở bằng Excel.</li></ol></div><div class="col mob"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>Trên điện thoại</div><a class="shot mob" href="img/mob-summary.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/mob-summary.png" alt="Tổng kết trên điện thoại" loading="lazy" width="390" height="1100"><span class="mk" style="left:1.54%;top:5.18%;width:93.08%;height:4.09%"><b>1</b></span><span class="mk" style="left:1.28%;top:9.18%;width:93.59%;height:4.36%"><b>2</b></span><span class="mk" style="left:1.28%;top:13.36%;width:93.59%;height:5.09%"><b>3</b></span><span class="mk" style="left:1.28%;top:18.27%;width:91.03%;height:4.36%"><b>4</b></span></a><ol class="steps"><li>Chọn <b>tháng</b> hoặc <b>năm</b>.</li><li><b>◀ ▶</b> chuyển kỳ.</li><li>Lọc theo <b>phòng</b>.</li><li><b>Xuất</b> file CSV.</li></ol></div></div></section>
+<section id="ca-nhan"><h2>7. Cá nhân – đơn của tôi, đổi mật khẩu, đăng xuất</h2>
+<p>Bấm vào <b>tên của bạn</b> ở góc trên bên phải (hoặc tab <b>Cá nhân</b>). Đổi mật khẩu xong, các máy khác đang đăng nhập tài khoản của bạn sẽ phải đăng nhập lại.</p>
+<div class="cols"><div class="col web"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Trên máy tính</div><a class="shot" href="img/web-me.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/web-me.png" alt="Trang cá nhân trên máy tính" loading="lazy" width="1280" height="1350"><span class="mk" style="left:2.42%;top:6.00%;width:95.16%;height:4.96%"><b>1</b></span><span class="mk" style="left:2.42%;top:26.07%;width:95.16%;height:2.30%"><b>2</b></span><span class="mk" style="left:2.42%;top:72.96%;width:95.16%;height:16.89%"><b>3</b></span><span class="mk" style="left:13.20%;top:92.67%;width:8.20%;height:3.56%"><b>4</b></span></a><ol class="steps"><li>Thông tin của bạn và <b>người duyệt đơn</b> của bạn; số ngày nghỉ tháng / năm.</li><li><b>Đơn nghỉ của tôi</b>: đơn đang chờ duyệt có nút <b>Hủy đơn</b>.</li><li><b>Đổi mật khẩu</b>: nhập mật khẩu hiện tại và mật khẩu mới.</li><li><b>Đăng xuất</b> (nhớ đăng xuất trên máy dùng chung).</li></ol></div><div class="col mob"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>Trên điện thoại</div><a class="shot mob" href="img/mob-me.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/mob-me.png" alt="Trang cá nhân trên điện thoại" loading="lazy" width="390" height="1670"><span class="mk" style="left:5.38%;top:4.31%;width:89.23%;height:4.01%"><b>1</b></span><span class="mk" style="left:5.38%;top:21.86%;width:89.23%;height:1.86%"><b>2</b></span><span class="mk" style="left:5.38%;top:65.75%;width:89.23%;height:19.28%"><b>3</b></span><span class="mk" style="left:40.77%;top:87.31%;width:26.92%;height:2.87%"><b>4</b></span></a><ol class="steps"><li>Thông tin và người duyệt đơn của bạn.</li><li><b>Đơn nghỉ của tôi</b>, hủy đơn đang chờ.</li><li><b>Đổi mật khẩu</b>.</li><li><b>Đăng xuất</b>.</li></ol></div></div></section>
+<section id="quan-tri"><h2>8. Quản trị (Quản trị viên, Giám đốc)</h2>
+<p>Quản trị viên quản lý toàn bộ tài khoản, loại nghỉ và ngày lễ. Giám đốc đổi được vai trò giữa Nhân viên, Trưởng/Phó phòng và Phó Giám đốc, và giao phòng phụ trách cho PGĐ.</p>
+<div class="cols"><div class="col web"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Trên máy tính</div><a class="shot" href="img/web-admin.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/web-admin.png" alt="Quản trị trên máy tính" loading="lazy" width="1280" height="860"><span class="mk" style="left:86.41%;top:7.56%;width:11.25%;height:5.58%"><b>1</b></span><span class="mk" style="left:1.17%;top:13.37%;width:96.48%;height:26.40%"><b>2</b></span><span class="mk" style="left:77.58%;top:58.72%;width:6.80%;height:3.14%"><b>3</b></span><span class="mk" style="left:88.98%;top:50.93%;width:4.84%;height:5.58%"><b>4</b></span></a><ol class="steps"><li><b>+ Thêm nhân sự</b>: để trống ô mã thì hệ thống tự tạo (dạng <code>ten.hodem</code>), mật khẩu ban đầu <code>123456</code>.</li><li><b>Ai duyệt đơn của từng phòng</b>: phòng chưa giao PGĐ thì Giám đốc duyệt.</li><li><b>Chưa đổi MK</b>: người này chưa đăng nhập lần nào; nhắc họ đăng nhập và đổi mật khẩu.</li><li><b>Sửa</b>: đổi vai trò, giao phòng phụ trách cho PGĐ, <b>đặt lại mật khẩu</b> (về 123456), chuyển trạng thái <b>Nghỉ việc</b>.</li></ol></div><div class="col mob"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>Trên điện thoại</div><a class="shot mob" href="img/mob-admin.png" target="_blank" rel="noopener" title="Bấm để xem ảnh lớn"><img src="img/mob-admin.png" alt="Quản trị trên điện thoại" loading="lazy" width="390" height="1100"><span class="mk" style="left:57.95%;top:5.09%;width:36.92%;height:4.36%"><b>1</b></span><span class="mk" style="left:1.28%;top:9.64%;width:93.59%;height:23.82%"><b>2</b></span></a><ol class="steps"><li><b>+ Thêm nhân sự</b>.</li><li><b>Ai duyệt đơn của từng phòng</b>.</li><li>Kéo ngang bảng <b>Tài khoản</b> để thấy nhãn <b>Chưa đổi MK</b> và nút <b>Sửa</b>.</li></ol></div></div></section>
+<section id="cai-dat"><h2>9. Đưa ứng dụng ra màn hình (lối tắt / nút app)</h2>
+<p>Sau khi cài, ứng dụng có biểu tượng <b>Portcoast</b>, mở bằng một chạm như phần mềm bình thường, không cần nhớ địa chỉ web.
+Lần đầu mở từ biểu tượng có thể phải <b>đăng nhập lại một lần</b> — nhớ đánh dấu <b>Giữ đăng nhập 30 ngày</b>.</p>
+<div class="cols eq"><div class="col web"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Trên máy tính</div><h3>Google Chrome (Windows)</h3>
+<div class="mock browser">
+  <div class="bbar"><span class="dots3"><i></i><i></i><i></i></span><span class="url">🔒 ngocdaika.github.io/nghi-phep-pec</span>
+  <span class="ico ring"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg><b class="n">1</b></span></div>
+  <div class="menu">
+    <div>Thẻ mới</div><div>Cửa sổ mới</div><div class="sep"></div>
+    <div class="ring">Truyền, lưu và chia sẻ ›<b class="n">2</b></div>
+    <div class="sub"><div>Lưu trang dưới dạng…</div><div class="ring">Tạo lối tắt…<b class="n">3</b></div></div>
+  </div>
+  <div class="dlg"><div class="dlg-h">Tạo lối tắt?</div><div class="dlg-r"><img class="appicon" src="../assets/apple-touch-icon.png" alt=""><span class="inp">Nghỉ phép PEC</span></div>
+  <label class="ring">☑ Mở dưới dạng cửa sổ<b class="n">4</b></label><div class="dlg-b"><span>Hủy</span><span class="pri ring">Tạo<b class="n">5</b></span></div></div>
+</div><ol class="steps"><li>Mở trang https://ngocdaika.github.io/nghi-phep-pec/, bấm nút <b>⋮</b> ở góc trên bên phải.</li><li>Chọn <b>Truyền, lưu và chia sẻ</b>.</li><li>Chọn <b>Tạo lối tắt…</b> <span class="muted">(nếu thấy <b>Cài đặt trang…</b> / biểu tượng cài đặt ở cuối thanh địa chỉ thì bấm vào đó cũng được)</span>.</li><li>Đánh dấu <b>Mở dưới dạng cửa sổ</b>.</li><li>Bấm <b>Tạo</b>.</li></ol><h3>Microsoft Edge</h3>
+<div class="mock browser">
+  <div class="bbar"><span class="url">🔒 ngocdaika.github.io/nghi-phep-pec</span><span class="ico ring"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><b class="n">1</b></span></div>
+  <div class="menu"><div>Thẻ mới</div><div class="sep"></div><div class="ring">Ứng dụng ›<b class="n">2</b></div>
+  <div class="sub"><div class="ring">Cài đặt trang web này dưới dạng ứng dụng<b class="n">3</b></div></div></div>
+  <div class="dlg"><div class="dlg-h">Cài đặt ứng dụng</div><div class="dlg-r"><img class="appicon" src="../assets/apple-touch-icon.png" alt=""><span class="inp">Nghỉ phép PEC</span></div>
+  <div class="dlg-b"><span>Hủy</span><span class="pri ring">Cài đặt<b class="n">4</b></span></div></div>
+</div><ol class="steps"><li>Bấm nút <b>…</b> ở góc trên bên phải.</li><li>Chọn <b>Ứng dụng</b>.</li><li>Chọn <b>Cài đặt trang web này dưới dạng ứng dụng</b>.</li><li>Bấm <b>Cài đặt</b>.</li></ol><h3>Kết quả</h3><div class="mock desk"><div class="desk-ic"><img class="appicon" src="../assets/apple-touch-icon.png" alt=""><span>Nghỉ phép PEC</span></div>
+<p>Biểu tượng Portcoast xuất hiện trên màn hình nền (Desktop). Bấm đúp để mở, ứng dụng chạy trong cửa sổ riêng như phần mềm.
+Muốn ghim xuống thanh tác vụ: mở ứng dụng → chuột phải vào biểu tượng ở thanh tác vụ → <b>Ghim vào thanh tác vụ</b>.</p></div></div><div class="col mob"><div class="col-h"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>Trên điện thoại</div><h3>iPhone / iPad (Safari)</h3><div class="phones">
+<div class="phone"><div class="scr">
+  <div class="p-top">ngocdaika.github.io</div>
+  <div class="p-body"><b>Lịch nghỉ phép</b><span>Trung tâm PEC</span></div>
+  <div class="p-bar"><span>‹</span><span>›</span><span class="ring sh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><b class="n">1</b></span><span>▢</span><span>⧉</span></div>
+</div></div>
+<div class="phone"><div class="scr sheet-ios">
+  <div class="p-sheet"><div class="row">Sao chép</div><div class="row">Thêm vào Mục ưa thích</div>
+  <div class="row ring">Thêm vào MH chính <span class="r">⊞</span><b class="n">2</b></div><div class="row">Đánh dấu</div></div>
+</div></div>
+<div class="phone"><div class="scr">
+  <div class="p-nav"><span>Hủy</span><b>Thêm vào MH chính</b><span class="ring add">Thêm<b class="n">3</b></span></div>
+  <div class="p-add"><img class="appicon" src="../assets/apple-touch-icon.png" alt=""><div><span class="inp">Nghỉ phép PEC</span><small>ngocdaika.github.io</small></div></div>
+</div></div></div><ol class="steps"><li>Mở trang bằng <b>Safari</b> (nếu bấm link trong Zalo/Messenger, chọn <b>Mở bằng Safari</b> trước). Chạm nút <b>Chia sẻ</b> <span class="muted">(ô vuông có mũi tên lên, ở thanh dưới; trên iOS mới có thể nằm trong nút <b>•••</b>)</span>.</li><li>Kéo xuống, chọn <b>Thêm vào MH chính</b> (Add to Home Screen).</li><li>Chạm <b>Thêm</b> ở góc trên bên phải.</li></ol><h3>Android (Chrome)</h3><div class="phones">
+<div class="phone"><div class="scr">
+  <div class="p-top a"><span>ngocdaika.github.io</span><span class="ring dot3"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg><b class="n">1</b></span></div>
+  <div class="p-menu"><div>Thẻ mới</div><div>Lịch sử</div><div class="ring">Thêm vào màn hình chính<b class="n">2</b></div><div>Chia sẻ…</div></div>
+</div></div>
+<div class="phone"><div class="scr dim">
+  <div class="p-dlg"><b>Thêm vào màn hình chính</b><div class="p-add"><img class="appicon" src="../assets/apple-touch-icon.png" alt=""><span class="inp">Nghỉ phép PEC</span></div>
+  <div class="dlg-b"><span>Hủy</span><span class="pri ring">Thêm<b class="n">3</b></span></div></div>
+</div></div>
+<div class="phone"><div class="scr home">
+  <div class="hgrid"><i></i><i></i><i></i><div class="hic"><img class="appicon" src="../assets/apple-touch-icon.png" alt=""><span>Nghỉ phép PEC</span></div><i></i><i></i><i></i><i></i></div>
+</div></div></div><ol class="steps"><li>Mở trang bằng <b>Chrome</b>, chạm nút <b>⋮</b> ở góc trên bên phải.</li><li>Chọn <b>Thêm vào màn hình chính</b> <span class="muted">(có máy ghi <b>Cài đặt ứng dụng</b>)</span>.</li><li>Chạm <b>Thêm</b> (hoặc <b>Cài đặt</b>). Biểu tượng Portcoast <b>Nghỉ phép PEC</b> xuất hiện trên màn hình chính.</li></ol></div></div></section>
+<section id="hoi-dap"><h2>10. Câu hỏi thường gặp</h2>
+<dl class="faq">
+<dt>Quên mật khẩu?</dt><dd>Báo Quản trị viên đặt lại. Mật khẩu trở về <code>123456</code>, đăng nhập rồi đặt mật khẩu mới.</dd>
+<dt>Báo "Nhập sai mật khẩu quá 5 lần"?</dt><dd>Tài khoản tạm khóa 15 phút để chống dò mật khẩu. Chờ 15 phút rồi thử lại.</dd>
+<dt>Không thấy tab Duyệt / Quản trị?</dt><dd>Các tab này chỉ hiện với người có quyền (PGĐ được giao phòng, Giám đốc, Quản trị).</dd>
+<dt>Gửi nhầm đơn?</dt><dd>Vào <b>Cá nhân → Đơn nghỉ của tôi</b>, bấm <b>Hủy đơn</b> khi đơn còn chờ duyệt. Đơn đã duyệt thì nhờ người duyệt hủy giúp.</dd>
+<dt>Dùng máy tính chung?</dt><dd>Không đánh dấu <b>Giữ đăng nhập 30 ngày</b>, và bấm <b>Đăng xuất</b> ở tab Cá nhân sau khi dùng.</dd>
+<dt>Màn hình hiển thị bản cũ?</dt><dd>Đóng hẳn trang / ứng dụng rồi mở lại, hoặc kéo xuống để tải lại.</dd>
+</dl></section>
+<footer>Ảnh minh hoạ chụp từ bản demo với tên giả. © Portcoast – Trung tâm PEC</footer>
+</main>
+</body>
+</html>

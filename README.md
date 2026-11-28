@@ -86,10 +86,18 @@ Dán `apps-script/Code.gs` mới vào Apps Script, chạy hàm `capNhatV3` một
 - đổi mã `NS01`, `NS02`… sang `tên.họđệm`, đặt mật khẩu về `123456` (phải đổi khi đăng nhập lần đầu), đổi theo cột `MaNV` trong tab `DonNghi`;
 - tài khoản khác (VD: `ADMIN`) chỉ đổi sang chữ thường (`admin`), giữ mật khẩu.
 
+## Hướng dẫn sử dụng
+
+Trang `huong-dan/` (https://ngocdaika.github.io/nghi-phep-pec/huong-dan/): ảnh chụp từng màn hình, khoanh chỗ bấm, 2 cột Máy tính / Điện thoại, kèm cách tạo lối tắt trên máy tính và nút app trên iPhone / Android. Link có sẵn ở màn hình đăng nhập và tab Cá nhân.
+- Ảnh trong `huong-dan/img/` chụp từ bản demo với **danh sách tên giả** (`?demo=1&shot&as=<mã>`, cấu hình `API_URL` để trống), không dùng tên thật.
+- Sửa nội dung hoặc toạ độ khoanh trong `tools/tao_huong_dan.py`, rồi chạy `python tools/tao_huong_dan.py`.
+- Biểu tượng app (`assets/icon-*.png`, `apple-touch-icon.png`, `favicon.png`) tạo từ logo vuông Portcoast trên nền trắng.
+
 ## Cấu trúc
 
 ```
 index.html, css/, js/        Giao diện (GitHub Pages)
+huong-dan/                   Trang hướng dẫn sử dụng (ảnh trong huong-dan/img/)
 js/logic.js                  Tính ngày nghỉ, tổng hợp, phân quyền
 js/api.js                    Gọi Apps Script + bản demo
 apps-script/Code.gs          Backend Google Apps Script

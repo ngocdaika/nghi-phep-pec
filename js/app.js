@@ -3,6 +3,8 @@
   var L = window.Logic, ST = L.ST, Api = window.Api, cfg = window.APP_CONFIG || {};
   var AUTH_KEY = 'np_auth' + (Api.demo ? '_demo' : '');
   var OTHER_COLOR = '#EC4899';
+  // Bản demo, chế độ chụp ảnh hướng dẫn: ?demo=1&shot&as=<mã> (vào thẳng vai trò), &as=login, &first (màn hình đổi mật khẩu)
+  var QS = new URLSearchParams(location.search), SHOT = Api.demo && QS.has('shot');
 
   var now = new Date();
   var S = {
@@ -35,6 +37,7 @@
   }
   var toastTimer;
   function toast(msg, bad) {
+    if (SHOT) return;
     var t = $('toast');
     t.textContent = msg;
     t.className = 'show' + (bad ? ' bad' : '');
@@ -139,7 +142,7 @@
 
   /* ---------------- Bản demo: chuyển vai trò ---------------- */
   function renderDemoBar() {
-    if (!Api.demo) return;
+    if (!Api.demo || SHOT) return;
     var cur = S.auth && S.auth.ma;
     var btns = Api.demoAs().map(function (o) {
       return '<button type="button" class="role-btn' + (o.ma === cur ? ' on' : '') + '" data-demo-as="' + o.ma + '">' + esc(o.label) + '</button>';
@@ -711,7 +714,8 @@
       '<label>Nhập lại mật khẩu mới<input type="password" name="p2" autocomplete="new-password" required minlength="6" maxlength="32"></label>' +
       '<div class="full small muted">Đổi mật khẩu xong, các máy khác đang đăng nhập tài khoản này sẽ phải đăng nhập lại.</div>' +
       '<div class="full"><button class="btn primary" type="submit">Đổi mật khẩu</button></div></form></div>' +
-      '<div class="card" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="refresh">↻ Tải lại dữ liệu</button><button class="btn bad" data-act="logout">Đăng xuất</button>' +
+      '<div class="card" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="refresh">↻ Tải lại dữ liệu</button>' +
+      '<a class="btn" href="huong-dan/" target="_blank" rel="noopener">📖 Hướng dẫn sử dụng</a><button class="btn bad" data-act="logout">Đăng xuất</button>' +
       (Api.demo ? '<button class="btn" data-act="resetDemo">Đặt lại dữ liệu demo</button>' : '') + '</div>';
   }
 
@@ -1030,11 +1034,24 @@
   var unitParts = String(cfg.UNIT_NAME || '').split(' – ');
   $('unitName').innerHTML = esc(unitParts[0]) + (unitParts.length > 1 ? '<em class="unit-sfx"> – ' + esc(unitParts.slice(1).join(' – ')) + '</em>' : '');
   $('loginUnit').textContent = cfg.UNIT_NAME || '';
-  $('demoBanner').hidden = !Api.demo;
+  $('demoBanner').hidden = !Api.demo || SHOT;
   var hv = location.hash.slice(1);
   if (VIEWS.some(function (x) { return x.id === hv; })) S.view = hv;
   Api.ready.then(function () {
     renderDemoBar();
+    if (SHOT && QS.get('as')) {
+      var as = QS.get('as');
+      if (as === 'login') { showLogin(); return; }
+      if (QS.has('first')) {
+        Api.call({ action: 'login', ma: as, pin: '123456' }).then(function (res) {
+          showLogin(); pendingFirst = { ma: as, pin: '123456', remember: false }; showFirstPin(res.me);
+        });
+        return;
+      }
+      S.auth = { token: Api.demoToken(as), exp: Date.now() + 3600000, remember: false, ma: as };
+      loadData();
+      return;
+    }
     var saved = loadAuth();
     if (saved) { S.auth = saved; loadData(); } else showLogin();
   });

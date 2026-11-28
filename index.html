@@ -8,10 +8,15 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Lịch nghỉ phép PEC – Portcoast</title>
-  <link rel="icon" type="image/png" href="assets/icon.png">
-  <link rel="apple-touch-icon" href="assets/icon.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Nghỉ phép PEC">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
   <header class="topbar">
@@ -48,6 +53,7 @@
       <button class="btn primary block" type="submit" id="loginBtn">Đăng nhập</button>
       <p class="err" id="loginErr"></p>
       <p class="muted small" id="loginHint">Mã nhân sự: tên + chữ đầu họ và tên đệm, không dấu (Nguyễn Hoàng Khánh Ngọc → ngoc.nhk). Lần đầu dùng mật khẩu 123456.</p>
+      <a class="guide-link" href="huong-dan/" target="_blank" rel="noopener">📖 Hướng dẫn sử dụng</a>
       <div id="demoRoles" class="demo-roles" hidden></div>
     </form>
     <form class="login-card" id="firstPinForm" autocomplete="on" hidden>
@@ -77,9 +83,9 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <script src="js/config.js?v=9"></script>
-  <script src="js/logic.js?v=9"></script>
-  <script src="js/api.js?v=9"></script>
-  <script src="js/app.js?v=9"></script>
+  <script src="js/config.js?v=10"></script>
+  <script src="js/logic.js?v=10"></script>
+  <script src="js/api.js?v=10"></script>
+  <script src="js/app.js?v=10"></script>
 </body>
 </html>
