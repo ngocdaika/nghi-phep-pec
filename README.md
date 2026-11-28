@@ -4,7 +4,7 @@ Dashboard nghỉ phép cho Trung tâm. Nhân sự tự khai ngày nghỉ, lãnh 
 
 - Giao diện: trang tĩnh (HTML/CSS/JS) chạy trên **GitHub Pages**
 - Dữ liệu: **một file Google Sheets trên Drive của người quản trị**, truy cập qua **Google Apps Script** (`apps-script/Code.gs`)
-- Chưa cấu hình API thì trang tự chạy **bản demo** với dữ liệu giả (hoặc mở với `?demo=1`)
+- Chưa cấu hình API thì trang tự chạy **bản demo** với dữ liệu giả (hoặc mở với `?demo=1`). Bản demo có nút chuyển vai trò: Quản trị, Giám đốc, Phó Giám đốc, Trưởng phòng, Nhân viên.
 
 > ⚠️ Repo này để công khai. **Không đưa file nhân sự hay PIN lên đây.** `.gitignore` đã chặn `*.xlsx`, `*.csv` và thư mục `private/`.
 
@@ -13,12 +13,13 @@ Dashboard nghỉ phép cho Trung tâm. Nhân sự tự khai ngày nghỉ, lãnh 
 | Vai trò (cột `VaiTro`) | Quyền |
 |---|---|
 | `Admin` – Quản trị | Toàn quyền. Tab **Quản trị**: thêm/sửa/khóa nhân sự, phân quyền, giao phòng cho PGĐ, đặt lại PIN, sửa loại nghỉ và ngày lễ, duyệt/xóa mọi đơn, khai nghỉ thay người khác. |
-| `GiamDoc` – Giám đốc | Duyệt mọi đơn. Nâng tài khoản lên Phó Giám đốc (giao phòng phụ trách) hoặc hạ về Cá nhân. |
-| `PGD` – Phó Giám đốc | Duyệt đơn của nhân viên thuộc các phòng ghi ở cột `PhuTrach` (cách nhau bằng dấu `;`). |
-| `NhanVien` – Cá nhân | Khai đơn, hủy đơn đang chờ duyệt, xem lịch, đổi PIN. |
+| `GiamDoc` – Giám đốc | Duyệt mọi đơn. Đổi vai trò giữa Nhân viên, Trưởng/Phó phòng và Phó Giám đốc (giao phòng phụ trách). |
+| `PGD` – Phó Giám đốc | Duyệt đơn của nhân sự thuộc các phòng ghi ở cột `PhuTrach` (cách nhau bằng dấu `;`). |
+| `TruongPhong` – Trưởng/Phó phòng | Như Nhân viên, nhưng được xem tổng kết tháng/năm của mọi người. |
+| `NhanVien` – Nhân viên | Khai đơn, hủy đơn đang chờ duyệt, xem lịch cả đơn vị, chỉ xem tổng kết của chính mình, đổi PIN. |
 
 Ai duyệt đơn của ai:
-- Nhân viên → PGĐ phụ trách phòng đó. Phòng chưa giao PGĐ → Giám đốc.
+- Nhân viên, Trưởng/Phó phòng → PGĐ phụ trách phòng đó. Phòng chưa giao PGĐ → Giám đốc.
 - Phó Giám đốc → Giám đốc.
 - Giám đốc và Quản trị → tự được duyệt.
 - Giám đốc và Quản trị luôn duyệt được mọi đơn.
@@ -67,8 +68,13 @@ Sau đó đăng nhập `ADMIN`, vào tab **Quản trị** giao phòng phụ trá
 
 - Ngày làm việc: thứ 2 – thứ 7. Không tính chủ nhật và ngày lễ trong tab `NgayLe`.
 - Tính được nửa ngày: "từ chiều" ở ngày đầu, "hết buổi sáng" ở ngày cuối.
-- Tổng ngày nghỉ gồm đơn đã duyệt và đơn chờ duyệt (phần chờ duyệt ghi riêng). Đơn bị từ chối hoặc đã hủy không tính.
-- Phép còn lại = PhepNam + PhepTon − số ngày của các loại nghỉ có `TruPhep = Có`.
+- Không quản lý phép năm. Loại: **Nghỉ phép**, **Công tác**, **Nghỉ không lương** (sửa trong tab Quản trị). Lịch còn đánh dấu **Chờ duyệt** (gạch sọc) và **Nửa ngày** (nửa ô).
+- Tổng ngày nghỉ gồm đơn đã duyệt và đơn chờ duyệt (phần chờ duyệt ghi riêng), **không tính Công tác** (loại có `TinhNghi = Không`). Công tác được đếm riêng. Đơn bị từ chối hoặc đã hủy không tính.
+- Tab **Tổng kết** có tổng kết tháng và tổng kết năm. Nhân viên chỉ thấy số liệu của mình.
+
+## Nâng cấp file dữ liệu cũ (tạo trước 28/11/2026)
+
+Dán `apps-script/Code.gs` mới vào Apps Script, chạy hàm `capNhatV2` một lần (thêm vai trò Trưởng/Phó phòng theo chức danh, đổi loại nghỉ, bỏ cột phép năm), rồi **Triển khai → Quản lý triển khai → Chỉnh sửa → Phiên bản mới**.
 
 ## Cấu trúc
 

@@ -6,7 +6,7 @@ Kết quả nằm trong thư mục private/ (đã chặn trong .gitignore, KHÔN
   - Danh sach PIN nhan su.xlsx   danh sách Mã NV + PIN để phát riêng cho từng người
 
 Vai trò mặc định: Giám đốc Trung tâm = GiamDoc; Phó Giám đốc = PGD (chưa giao phòng — giao trong tab Quản trị);
-còn lại = NhanVien. Thêm tài khoản ADMIN (quản trị, không thuộc phòng nào nên không hiện trên lịch).
+Trưởng phòng / Phó Trưởng phòng / Trưởng bộ phận = TruongPhong; còn lại = NhanVien. Thêm tài khoản ADMIN (quản trị, không thuộc phòng nào nên không hiện trên lịch).
 
 Chạy:  python tools/tao_du_lieu_ban_dau.py "PEC_Danh sach nhan su.xlsx"
 """
@@ -20,13 +20,11 @@ import sys
 import openpyxl
 from openpyxl.styles import Font, PatternFill
 
+# (Tên, Tính là ngày nghỉ, Màu). Không quản lý phép năm.
 LOAI_NGHI = [
-    ('Phép năm', 'Có', '#0093DD'),
-    ('Nghỉ ốm', 'Không', '#F59E0B'),
-    ('Việc riêng có lương (cưới, tang…)', 'Không', '#8B5CF6'),
-    ('Nghỉ không lương', 'Không', '#64748B'),
-    ('Nghỉ bù', 'Không', '#10B981'),
-    ('Công tác', 'Không', '#0EA5E9'),
+    ('Nghỉ phép', 'Có', '#0093DD'),
+    ('Công tác', 'Không', '#10B981'),
+    ('Nghỉ không lương', 'Có', '#F97316'),
 ]
 
 # Ngày lễ: kiểm tra lại theo thông báo của công ty. Mục "(dự kiến)" cần xác nhận.
@@ -81,6 +79,8 @@ def gan_vai_tro(people):
             p['vaitro'] = 'GiamDoc'
         elif c.startswith('phó giám đốc'):
             p['vaitro'] = 'PGD'
+        elif c.startswith('trưởng') or c.startswith('phó trưởng'):
+            p['vaitro'] = 'TruongPhong'
         else:
             p['vaitro'] = 'NhanVien'
     return people
@@ -110,9 +110,9 @@ def main(src, out_dir='private'):
     seed = {
         'PIN_SALT': salt,
         'NhanSu': [{'MaNV': p['ma'], 'HoTen': p['ten'], 'Phong': p['phong'], 'ChucDanh': p['chuc'],
-                    'VaiTro': p['vaitro'], 'PhuTrach': '', 'PhepNam': '12', 'PhepTon': '0',
+                    'VaiTro': p['vaitro'], 'PhuTrach': '',
                     'PIN': hash_pin(salt, p['ma'], p['pin']), 'TrangThai': 'Đang làm'} for p in people],
-        'LoaiNghi': [{'Ten': t, 'TruPhep': tru, 'Mau': mau} for t, tru, mau in LOAI_NGHI],
+        'LoaiNghi': [{'Ten': t, 'TinhNghi': tinh, 'Mau': mau} for t, tinh, mau in LOAI_NGHI],
         'NgayLe': [{'Ngay': d, 'TenNgayLe': ten} for d, ten in NGAY_LE],
     }
     os.makedirs(out_dir, exist_ok=True)
@@ -128,7 +128,7 @@ def main(src, out_dir='private'):
     bold, fill = Font(bold=True, color='FFFFFF'), PatternFill('solid', fgColor='0093DD')
     for c in ws[1]:
         c.font, c.fill = bold, fill
-    names = {'Admin': 'Quản trị', 'GiamDoc': 'Giám đốc', 'PGD': 'Phó Giám đốc', 'NhanVien': 'Cá nhân'}
+    names = {'Admin': 'Quản trị', 'GiamDoc': 'Giám đốc', 'PGD': 'Phó Giám đốc', 'TruongPhong': 'Trưởng/Phó phòng', 'NhanVien': 'Nhân viên'}
     for p in people:
         ws.append([p['ma'], p['ten'], p['phong'], p['chuc'], names[p['vaitro']], p['pin']])
     for row in ws.iter_rows(min_row=2, min_col=6, max_col=6):

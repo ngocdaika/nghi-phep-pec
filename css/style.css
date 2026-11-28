@@ -61,7 +61,16 @@ code { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; }
   border: 1px solid var(--line); background: #fff; border-radius: 20px; padding: 6px 12px; cursor: pointer;
   white-space: nowrap; font-weight: 600; max-width: 220px; overflow: hidden; text-overflow: ellipsis;
 }
-.demo-banner { background: #FFF7E0; color: #7A5300; padding: 6px 20px; font-size: 13px; border-bottom: 1px solid #F3E3B0; }
+.demo-banner { background: #FFF7E0; color: #7A5300; padding: 6px 20px; font-size: 13px; border-bottom: 1px solid #F3E3B0;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.demo-banner[hidden] { display: none; }
+.demo-tag { background: #F59E0B; color: #fff; font-weight: 800; font-size: 11px; letter-spacing: .5px; padding: 2px 7px; border-radius: 6px; }
+.role-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.role-btn { border: 1px solid #E7C873; background: #fff; color: #7A5300; border-radius: 999px; padding: 4px 12px; font: inherit; font-weight: 600; cursor: pointer; }
+.role-btn:hover { border-color: var(--brand); color: var(--brand-dark); }
+.role-btn.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.demo-roles .role-btns { justify-content: center; }
+.demo-roles .role-btn { padding: 8px 14px; }
 
 main { padding: 16px 20px 40px; max-width: 1600px; margin: 0 auto; }
 
@@ -220,6 +229,7 @@ table.sum-tbl { border-collapse: separate; border-spacing: 0; width: 100%; font-
 .role.Admin { background: #FEE2E2; color: #991B1B; }
 .role.GiamDoc { background: #E0F2FE; color: #075985; }
 .role.PGD { background: #DCFCE7; color: #166534; }
+.role.TruongPhong { background: #FEF3C7; color: #92400E; }
 .adm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
 .adm-grid .card + .card { margin-top: 0; }
 .ed-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow: auto; padding-right: 2px; }
@@ -322,4 +332,35 @@ table.sum-tbl { border-collapse: separate; border-spacing: 0; width: 100%; font-
   .topbar .tabs, .user-chip, .demo-banner, .toolbar .btn, .bottom-nav { display: none !important; }
   .grid-wrap, .tbl-wrap { max-height: none; overflow: visible; box-shadow: none; }
   body { background: #fff; }
+}
+
+/* Cập nhật v4: loại nghỉ, tổng kết tháng, công tác */
+.cal td.sum .ct, .ct { display: block; font-size: 10px; font-weight: 600; color: #059669; }
+.type-pick { display: flex; gap: 8px; flex-wrap: wrap; }
+.type-pick .tp { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600; background: #fff; }
+.type-pick .tp input { position: absolute; opacity: 0; pointer-events: none; }
+.type-pick .tp .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
+.type-pick .tp:has(input:checked) { border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 18%, transparent); }
+.type-pick .tp:has(input:focus-visible) { outline: 2px solid var(--brand); }
+.seg-ctl.mode { margin-top: 0; }
+.note { background: var(--brand-soft); color: var(--brand-dark); border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; }
+.sum-tbl th .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; vertical-align: middle; }
+.chart .col[data-month] { cursor: pointer; }
+.chart .col[data-month]:hover .bar { filter: brightness(1.1); }
+.mini-list { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow: auto; }
+.mini { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 8px 10px; font: inherit; cursor: pointer; }
+.mini:hover { border-color: var(--brand); }
+.mini .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.mini span { color: var(--muted); font-size: 13px; }
+.mini .chip { margin-left: auto; }
+@media (max-width: 1100px) {
+  .stats .stat.accent, .stats .stat.accent ~ .stat:nth-child(4):last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .demo-lbl { display: none; }
+  .person-chip { white-space: nowrap; }
+  .role-btn { padding: 4px 10px; font-size: 12px; }
+  .type-pick .tp { flex: 1 1 auto; justify-content: center; }
+  .seg-ctl.mode { width: 100%; }
+  .seg-ctl.mode button { flex: 1; }
 }

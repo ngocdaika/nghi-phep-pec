@@ -6,22 +6,31 @@
  *
  * Vai trò (cột VaiTro):
  *   Admin    – toàn quyền, tab Quản trị: nhân sự, phân quyền, đặt lại PIN, loại nghỉ, ngày lễ
- *   GiamDoc  – duyệt mọi đơn, nâng/hạ tài khoản giữa Cá nhân và Phó Giám đốc
- *   PGD      – duyệt đơn của nhân viên thuộc các phòng ghi ở cột PhuTrach (cách nhau bằng dấu ;)
- *   NhanVien – cá nhân
+ *   GiamDoc     – duyệt mọi đơn, đổi vai trò giữa Nhân viên, Trưởng/Phó phòng và Phó Giám đốc
+ *   PGD         – duyệt đơn của nhân sự thuộc các phòng ghi ở cột PhuTrach (cách nhau bằng dấu ;)
+ *   TruongPhong – Trưởng/Phó phòng: như nhân viên, được xem tổng kết của mọi người
+ *   NhanVien    – cá nhân, chỉ xem tổng kết của mình
+ * Không quản lý phép năm. Loại nghỉ (tab LoaiNghi): TinhNghi = Không cho loại không tính là nghỉ (VD: Công tác).
+ * Nâng cấp file dữ liệu cũ: chạy hàm capNhatV2() một lần.
  * PIN được lưu dạng mã hóa (h1$…). Ô PIN ghi số thường cũng được: lần đăng nhập đầu sẽ tự mã hóa.
  */
 
 var TZ = 'Asia/Ho_Chi_Minh';
 var HEADERS = {
-  NhanSu: ['MaNV', 'HoTen', 'Phong', 'ChucDanh', 'VaiTro', 'PhuTrach', 'PhepNam', 'PhepTon', 'PIN', 'TrangThai'],
-  LoaiNghi: ['Ten', 'TruPhep', 'Mau'],
+  NhanSu: ['MaNV', 'HoTen', 'Phong', 'ChucDanh', 'VaiTro', 'PhuTrach', 'PIN', 'TrangThai'],
+  LoaiNghi: ['Ten', 'TinhNghi', 'Mau'],
   NgayLe: ['Ngay', 'TenNgayLe'],
   DonNghi: ['ID', 'MaNV', 'HoTen', 'LoaiNghi', 'TuNgay', 'TuBuoi', 'DenNgay', 'DenBuoi', 'SoNgay', 'LyDo',
             'TrangThai', 'NguoiDuyet', 'NgayDuyet', 'GhiChuDuyet', 'NgayTao']
 };
 var ST = { PENDING: 'Chờ duyệt', APPROVED: 'Đã duyệt', REJECTED: 'Từ chối', CANCELLED: 'Đã hủy' };
-var ROLES = { Admin: 'Quản trị', GiamDoc: 'Giám đốc', PGD: 'Phó Giám đốc', NhanVien: 'Cá nhân' };
+var ROLES = { Admin: 'Quản trị', GiamDoc: 'Giám đốc', PGD: 'Phó Giám đốc', TruongPhong: 'Trưởng/Phó phòng', NhanVien: 'Nhân viên' };
+var GD_ROLES = ['NhanVien', 'TruongPhong', 'PGD'];
+var DEFAULT_TYPES = [
+  { Ten: 'Nghỉ phép', TinhNghi: 'Có', Mau: '#0093DD' },
+  { Ten: 'Công tác', TinhNghi: 'Không', Mau: '#10B981' },
+  { Ten: 'Nghỉ không lương', TinhNghi: 'Có', Mau: '#F97316' }
+];
 var AUTO = '(tự động)';
 var MAX_FAILS = 5;
 
@@ -41,12 +50,7 @@ function setup() {
   // Cột ngày và PIN để dạng chữ, tránh Sheets tự đổi định dạng
   ss.getSheetByName('DonNghi').getRange('E:G').setNumberFormat('@');
   ss.getSheetByName('NgayLe').getRange('A:A').setNumberFormat('@');
-  ss.getSheetByName('NhanSu').getRange('I:I').setNumberFormat('@');
-  var ns = ss.getSheetByName('NhanSu');
-  ns.getRange('E2:E').setDataValidation(SpreadsheetApp.newDataValidation()
-    .requireValueInList(Object.keys(ROLES), true).setAllowInvalid(false).build());
-  ns.getRange('J2:J').setDataValidation(SpreadsheetApp.newDataValidation()
-    .requireValueInList(['Đang làm', 'Nghỉ việc'], true).setAllowInvalid(false).build());
+  formatStaffColumns_();
   // Nạp dữ liệu ban đầu từ Seed.gs (nếu có) vào các tab còn trống
   if (typeof SEED !== 'undefined') {
     // Seed.gs chứa PIN đã mã hóa sẵn bằng muối của nó → dùng muối này khi bảng nhân sự còn trống
@@ -56,6 +60,7 @@ function setup() {
       if (!table_(name).rows.length && SEED[name] && SEED[name].length) rewrite_(name, SEED[name]);
     });
   }
+  if (!table_('LoaiNghi').rows.length) rewrite_('LoaiNghi', DEFAULT_TYPES);
   salt_();
   // Mã hóa mọi PIN đang ghi dạng số thường
   var n = 0;
@@ -66,6 +71,51 @@ function setup() {
 }
 
 /* ---------- HTTP ---------- */
+
+/** Định dạng cột PIN, ô chọn vai trò và trạng thái theo tên cột (file cũ có thể khác vị trí cột) */
+function formatStaffColumns_() {
+  var sh = SpreadsheetApp.getActive().getSheetByName('NhanSu');
+  var head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(function (h) { return String(h).trim(); });
+  var col = function (name) { return head.indexOf(name) + 1; };
+  var rows = Math.max(sh.getMaxRows() - 1, 1);
+  if (col('PIN')) sh.getRange(2, col('PIN'), rows, 1).setNumberFormat('@');
+  if (col('VaiTro')) sh.getRange(2, col('VaiTro'), rows, 1).setDataValidation(SpreadsheetApp.newDataValidation()
+    .requireValueInList(Object.keys(ROLES), true).setAllowInvalid(false).build());
+  if (col('TrangThai')) sh.getRange(2, col('TrangThai'), rows, 1).setDataValidation(SpreadsheetApp.newDataValidation()
+    .requireValueInList(['Đang làm', 'Nghỉ việc'], true).setAllowInvalid(false).build());
+}
+
+/**
+ * Nâng cấp file dữ liệu tạo trước bản 28/11/2026 (chạy một lần trong trình soạn Apps Script):
+ *  - Thêm vai trò TruongPhong; ai đang là NhanVien có chức danh Trưởng phòng / Phó Trưởng phòng / Trưởng bộ phận → TruongPhong
+ *  - Tab LoaiNghi: thay bằng 3 loại Nghỉ phép, Công tác, Nghỉ không lương (cột TinhNghi thay TruPhep)
+ *  - Bỏ hai cột PhepNam, PhepTon (không quản lý phép năm)
+ * Đơn nghỉ cũ giữ nguyên.
+ */
+function capNhatV2() {
+  var ss = SpreadsheetApp.getActive();
+  var ns = ss.getSheetByName('NhanSu');
+  // Xóa cột phép năm
+  ['PhepTon', 'PhepNam'].forEach(function (name) {
+    var head = ns.getRange(1, 1, 1, ns.getLastColumn()).getValues()[0].map(function (h) { return String(h).trim(); });
+    var c = head.indexOf(name);
+    if (c >= 0) ns.deleteColumn(c + 1);
+  });
+  ns.getDataRange().clearDataValidations();
+  formatStaffColumns_();
+  var n = 0;
+  staff_().forEach(function (s) {
+    if (s.vaiTro === 'NhanVien' && /^(trưởng|phó trưởng)/i.test(s.chucDanh.trim())) {
+      writeStaff_(s._row, { VaiTro: 'TruongPhong' }); n++;
+    }
+  });
+  // Loại nghỉ
+  var lt = ss.getSheetByName('LoaiNghi');
+  lt.getRange(1, 1, 1, 3).setValues([HEADERS.LoaiNghi]).setFontWeight('bold');
+  if (lt.getLastColumn() > 3) lt.deleteColumns(4, lt.getLastColumn() - 3);
+  rewrite_('LoaiNghi', DEFAULT_TYPES);
+  return 'OK – ' + n + ' tài khoản chuyển sang Trưởng/Phó phòng; loại nghỉ: Nghỉ phép, Công tác, Nghỉ không lương';
+}
 
 function doGet() {
   return out_({ ok: true, app: 'nghi-phep-pec', time: new Date().toISOString() });
@@ -143,7 +193,6 @@ function staff_() {
     return {
       ma: String(r.MaNV).toUpperCase(), ten: String(r.HoTen), phong: String(r.Phong),
       chucDanh: String(r.ChucDanh), vaiTro: ROLES[role] ? role : 'NhanVien', phuTrach: String(r.PhuTrach || ''),
-      phepNam: r.PhepNam === '' ? 12 : Number(r.PhepNam), phepTon: Number(r.PhepTon || 0),
       pin: String(r.PIN), trangThai: String(r.TrangThai || 'Đang làm'), _row: r._row
     };
   });
@@ -151,7 +200,10 @@ function staff_() {
 
 function types_() {
   return table_('LoaiNghi').rows.map(function (r) {
-    return { ten: String(r.Ten), truPhep: /^c[oó]/i.test(String(r.TruPhep)), mau: String(r.Mau || '') };
+    var ten = String(r.Ten);
+    // TinhNghi = Không → không cộng vào tổng ngày nghỉ (VD: Công tác). File cũ chưa có cột này thì đoán theo tên.
+    var tinh = r.TinhNghi !== undefined ? !/^kh/i.test(String(r.TinhNghi)) : !/công tác/i.test(ten);
+    return { ten: ten, tinhNghi: tinh, mau: String(r.Mau || '') };
   });
 }
 
@@ -218,14 +270,15 @@ function phuTrachList_(s) {
   return String((s && s.phuTrach) || '').split(';').map(function (x) { return x.trim(); }).filter(Boolean);
 }
 function covers_(pgd, phong) { return pgd.vaiTro === 'PGD' && phuTrachList_(pgd).indexOf(phong) >= 0; }
-function needsApproval_(p) { return p.vaiTro === 'NhanVien' || p.vaiTro === 'PGD'; }
+function isStaffRole_(p) { return p.vaiTro === 'NhanVien' || p.vaiTro === 'TruongPhong'; }
+function needsApproval_(p) { return isStaffRole_(p) || p.vaiTro === 'PGD'; }
 function isApprover_(me) {
   return me.vaiTro === 'Admin' || me.vaiTro === 'GiamDoc' || (me.vaiTro === 'PGD' && phuTrachList_(me).length > 0);
 }
 function primaryApprovers_(staff, p) {
   if (!needsApproval_(p)) return [];
   var active = staff.filter(function (s) { return s.trangThai !== 'Nghỉ việc' && s.ma !== p.ma; });
-  if (p.vaiTro === 'NhanVien') {
+  if (isStaffRole_(p)) {
     var a = active.filter(function (s) { return covers_(s, p.phong); });
     if (a.length) return a;
   }
@@ -238,7 +291,7 @@ function canApprovePerson_(viewer, requester) {
   if (viewer.vaiTro === 'Admin') return true;
   if (!needsApproval_(requester)) return false;
   if (viewer.vaiTro === 'GiamDoc') return true;
-  return requester.vaiTro === 'NhanVien' && covers_(viewer, requester.phong);
+  return isStaffRole_(requester) && covers_(viewer, requester.phong);
 }
 function canSeeReasonPerson_(viewer, requester) {
   return !!viewer && !!requester && (viewer.ma === requester.ma || viewer.vaiTro === 'GiamDoc' || canApprovePerson_(viewer, requester));
@@ -256,7 +309,8 @@ function publicMe_(ctx) {
   return {
     ma: me.ma, ten: me.ten, phong: me.phong, chucDanh: me.chucDanh, vaiTro: me.vaiTro, phuTrach: me.phuTrach,
     isAdmin: me.vaiTro === 'Admin', isApprover: isApprover_(me),
-    canManage: me.vaiTro === 'Admin' || me.vaiTro === 'GiamDoc'
+    canManage: me.vaiTro === 'Admin' || me.vaiTro === 'GiamDoc',
+    seeAll: me.vaiTro !== 'NhanVien'
   };
 }
 
@@ -270,7 +324,7 @@ function getData_(ctx) {
   var manage = ctx.me.vaiTro === 'Admin' || ctx.me.vaiTro === 'GiamDoc';
   var staff = ctx.staff.filter(function (s) { return manage || s.trangThai !== 'Nghỉ việc'; }).map(function (s) {
     return { ma: s.ma, ten: s.ten, phong: s.phong, chucDanh: s.chucDanh, vaiTro: s.vaiTro, phuTrach: s.phuTrach,
-             phepNam: s.phepNam, phepTon: s.phepTon, trangThai: s.trangThai };
+             trangThai: s.trangThai };
   });
   var reqs = requests_().filter(function (r) {
     if (r.trangThai === ST.CANCELLED) return false;
@@ -399,8 +453,8 @@ function saveStaff_(ctx, d, isNew) {
 
   if (me.vaiTro === 'GiamDoc') {
     if (isNew || !target) throw new Error('Chỉ quản trị viên được thêm nhân sự');
-    if (target.vaiTro !== 'NhanVien' && target.vaiTro !== 'PGD') throw new Error('Giám đốc chỉ điều chỉnh tài khoản Cá nhân và Phó Giám đốc');
-    if (role !== 'NhanVien' && role !== 'PGD') throw new Error('Giám đốc chỉ nâng lên Phó Giám đốc hoặc hạ về Cá nhân');
+    if (GD_ROLES.indexOf(target.vaiTro) < 0) throw new Error('Giám đốc chỉ điều chỉnh tài khoản Nhân viên, Trưởng/Phó phòng và Phó Giám đốc');
+    if (GD_ROLES.indexOf(role) < 0) throw new Error('Giám đốc chỉ đặt vai trò Nhân viên, Trưởng/Phó phòng hoặc Phó Giám đốc');
     writeStaff_(target._row, { VaiTro: role, PhuTrach: role === 'PGD' ? cleanPhuTrach_(d.phuTrach) : '' });
     return { saved: ma };
   }
@@ -412,10 +466,8 @@ function saveStaff_(ctx, d, isNew) {
   var values = {
     HoTen: ten, Phong: String(d.phong || '').trim(), ChucDanh: String(d.chucDanh || '').trim(), VaiTro: role,
     PhuTrach: role === 'PGD' ? cleanPhuTrach_(d.phuTrach) : '',
-    PhepNam: d.phepNam === '' || d.phepNam == null ? 12 : Number(d.phepNam), PhepTon: Number(d.phepTon || 0),
     TrangThai: trangThai
   };
-  if (isNaN(values.PhepNam) || isNaN(values.PhepTon)) throw new Error('Số ngày phép không hợp lệ');
   var admins = ctx.staff.filter(function (s) { return s.vaiTro === 'Admin' && s.trangThai !== 'Nghỉ việc' && s.ma !== ma; });
   if (!admins.length && (role !== 'Admin' || trangThai === 'Nghỉ việc')) throw new Error('Phải còn ít nhất một tài khoản Quản trị');
 
@@ -462,7 +514,7 @@ function saveTypes_(ctx, list) {
     if (!ten || seen[ten]) return;
     seen[ten] = 1;
     var mau = /^#[0-9a-f]{6}$/i.test(String(x.mau)) ? String(x.mau).toUpperCase() : '#64748B';
-    rows.push({ Ten: ten.slice(0, 60), TruPhep: x.truPhep ? 'Có' : 'Không', Mau: mau });
+    rows.push({ Ten: ten.slice(0, 60), TinhNghi: x.tinhNghi === false ? 'Không' : 'Có', Mau: mau });
   });
   if (!rows.length) throw new Error('Cần ít nhất một loại nghỉ');
   rewrite_('LoaiNghi', rows);

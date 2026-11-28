@@ -48,27 +48,35 @@
 
   function isActive(r) { return r.trangThai === ST.APPROVED || r.trangThai === ST.PENDING; }
 
+  function emptyYear() {
+    var z = function () { return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; };
+    return { months: z(), total: 0, ctMonths: z(), ct: 0, pending: 0, byType: {}, byTypeMonth: {} };
+  }
+  /** Loại nghỉ có tính là ngày nghỉ không (Công tác thì không). Loại lạ mặc định là nghỉ. */
+  function isOff(typeMap, loai) { return !(typeMap[loai] && typeMap[loai].tinhNghi === false); }
+
   /**
-   * Dựng chỉ mục: byPerson[ma][ymd] = [{req, part, v}], và tổng theo năm/tháng.
+   * Dựng chỉ mục: byPerson[ma][ymd] = [{req, part, v}] và tổng theo năm/tháng.
+   * months/total: ngày nghỉ (không gồm công tác); ctMonths/ct: ngày công tác; pending: ngày chờ duyệt (mọi loại).
    */
   function buildIndex(requests, holidaySet, typeMap) {
     var byPerson = {};
-    var totals = {}; // totals[ma][year] = {months:[12], total, pending, phep}
+    var totals = {};
     requests.forEach(function (r) {
       if (!isActive(r)) return;
       var pend = r.trangThai === ST.PENDING;
-      var tru = typeMap[r.loai] ? typeMap[r.loai].truPhep : false;
+      var off = isOff(typeMap, r.loai);
       expandLeave(r, holidaySet).forEach(function (x) {
         var p = byPerson[r.ma] || (byPerson[r.ma] = {});
         (p[x.d] || (p[x.d] = [])).push({ req: r, part: x.part, v: x.v });
         var y = +x.d.slice(0, 4), m = +x.d.slice(5, 7);
         var t = totals[r.ma] || (totals[r.ma] = {});
-        var ty = t[y] || (t[y] = { months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 0, pending: 0, phep: 0, byType: {} });
-        ty.months[m - 1] += x.v;
-        ty.total += x.v;
+        var ty = t[y] || (t[y] = emptyYear());
+        if (off) { ty.months[m - 1] += x.v; ty.total += x.v; } else { ty.ctMonths[m - 1] += x.v; ty.ct += x.v; }
         if (pend) ty.pending += x.v;
-        if (tru) ty.phep += x.v;
         ty.byType[r.loai] = (ty.byType[r.loai] || 0) + x.v;
+        var bm = ty.byTypeMonth[r.loai] || (ty.byTypeMonth[r.loai] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        bm[m - 1] += x.v;
       });
     });
     return { byPerson: byPerson, totals: totals };
@@ -76,7 +84,7 @@
 
   function yearTotals(index, ma, y) {
     var t = index.totals[ma] && index.totals[ma][y];
-    return t || { months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 0, pending: 0, phep: 0, byType: {} };
+    return t || emptyYear();
   }
 
   function fmtNum(n) {
@@ -85,24 +93,29 @@
   }
 
   /* ---------- Phân quyền (giữ giống apps-script/Code.gs) ----------
-   * Admin: toàn quyền. GiamDoc: duyệt mọi đơn. PGD: duyệt đơn của nhân viên thuộc các phòng phụ trách.
-   * NhanVien: cá nhân. Đơn của NhanVien → PGĐ phụ trách phòng (không có thì Giám đốc);
+   * Admin: toàn quyền. GiamDoc: duyệt mọi đơn. PGD: duyệt đơn của nhân sự thuộc các phòng phụ trách.
+   * TruongPhong (Trưởng/Phó phòng): như cá nhân nhưng được xem tổng kết của mọi người.
+   * NhanVien: cá nhân, chỉ xem tổng kết của chính mình.
+   * Đơn của NhanVien/TruongPhong → PGĐ phụ trách phòng (không có thì Giám đốc);
    * đơn của PGD → Giám đốc; đơn của Giám đốc và Admin tự được duyệt. */
-  var ROLES = { Admin: 'Quản trị', GiamDoc: 'Giám đốc', PGD: 'Phó Giám đốc', NhanVien: 'Cá nhân' };
+  var ROLES = { Admin: 'Quản trị', GiamDoc: 'Giám đốc', PGD: 'Phó Giám đốc', TruongPhong: 'Trưởng/Phó phòng', NhanVien: 'Nhân viên' };
 
   function phuTrachList(s) {
     return String((s && s.phuTrach) || '').split(';').map(function (x) { return x.trim(); }).filter(Boolean);
   }
+  function isStaffRole(p) { return p.vaiTro === 'NhanVien' || p.vaiTro === 'TruongPhong'; }
   function covers(pgd, phong) { return pgd.vaiTro === 'PGD' && phuTrachList(pgd).indexOf(phong) >= 0; }
-  function needsApproval(p) { return p.vaiTro === 'NhanVien' || p.vaiTro === 'PGD'; }
+  function needsApproval(p) { return isStaffRole(p) || p.vaiTro === 'PGD'; }
   function isApprover(me) {
     return me.vaiTro === 'Admin' || me.vaiTro === 'GiamDoc' || (me.vaiTro === 'PGD' && phuTrachList(me).length > 0);
   }
+  /** Được xem tổng kết tháng/năm của mọi người (Nhân viên chỉ xem của mình) */
+  function canSeeAllTotals(me) { return !!me && me.vaiTro !== 'NhanVien'; }
   /** Người duyệt chính của p (để hiển thị và quyết định có tự duyệt hay không) */
   function primaryApprovers(staff, p) {
     if (!needsApproval(p)) return [];
     var active = staff.filter(function (s) { return s.trangThai !== 'Nghỉ việc' && s.ma !== p.ma; });
-    if (p.vaiTro === 'NhanVien') {
+    if (isStaffRole(p)) {
       var a = active.filter(function (s) { return covers(s, p.phong); });
       if (a.length) return a;
     }
@@ -116,7 +129,7 @@
     if (viewer.vaiTro === 'Admin') return true;
     if (!needsApproval(requester)) return false;
     if (viewer.vaiTro === 'GiamDoc') return true;
-    return requester.vaiTro === 'NhanVien' && covers(viewer, requester.phong);
+    return isStaffRole(requester) && covers(viewer, requester.phong);
   }
   function canSeeReason(viewer, requester) {
     return !!viewer && !!requester && (viewer.ma === requester.ma || viewer.vaiTro === 'GiamDoc' || canApprove(viewer, requester));
@@ -125,8 +138,8 @@
   global.Logic = {
     ST: ST, DOW: DOW, parseYMD: parseYMD, fmtYMD: fmtYMD, todayYMD: todayYMD, daysInMonth: daysInMonth, ymd: ymd,
     dow: dow, viDate: viDate, validateRange: validateRange, expandLeave: expandLeave, isActive: isActive,
-    buildIndex: buildIndex, yearTotals: yearTotals, fmtNum: fmtNum,
-    ROLES: ROLES, phuTrachList: phuTrachList, needsApproval: needsApproval, isApprover: isApprover,
+    buildIndex: buildIndex, yearTotals: yearTotals, fmtNum: fmtNum, isOff: isOff,
+    ROLES: ROLES, phuTrachList: phuTrachList, isStaffRole: isStaffRole, needsApproval: needsApproval, isApprover: isApprover, canSeeAllTotals: canSeeAllTotals,
     primaryApprovers: primaryApprovers, canApprove: canApprove, canSeeReason: canSeeReason
   };
 })(typeof window !== 'undefined' ? window : this);

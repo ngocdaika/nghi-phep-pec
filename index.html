@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" href="assets/icon.png">
   <link rel="apple-touch-icon" href="assets/icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body>
   <header class="topbar">
@@ -20,9 +20,7 @@
     <nav class="tabs" id="tabs" aria-label="Chức năng"></nav>
     <button class="user-chip" id="userChip" type="button" hidden></button>
   </header>
-  <div id="demoBanner" class="demo-banner" hidden>
-    Đang chạy <b>bản demo</b> với dữ liệu giả. Đăng nhập: <code>ADMIN</code> (quản trị), <code>NS01</code> (giám đốc), <code>NS02</code> (PGĐ), <code>NS05</code> (cá nhân)… PIN <code>111111</code>
-  </div>
+  <div id="demoBanner" class="demo-banner" hidden></div>
 
   <main id="main">
     <section class="view" id="view-calendar"></section>
@@ -47,6 +45,7 @@
       <button class="btn primary block" type="submit" id="loginBtn">Đăng nhập</button>
       <p class="err" id="loginErr"></p>
       <p class="muted small">Chưa có mã? Liên hệ quản trị viên của Trung tâm.</p>
+      <div id="demoRoles" class="demo-roles" hidden></div>
     </form>
   </div>
 
@@ -59,9 +58,9 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <script src="js/config.js?v=3"></script>
-  <script src="js/logic.js?v=3"></script>
-  <script src="js/api.js?v=3"></script>
-  <script src="js/app.js?v=3"></script>
+  <script src="js/config.js?v=4"></script>
+  <script src="js/logic.js?v=4"></script>
+  <script src="js/api.js?v=4"></script>
+  <script src="js/app.js?v=4"></script>
 </body>
 </html>
