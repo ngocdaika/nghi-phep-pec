@@ -38,7 +38,7 @@
   var DEFAULT_PIN = '123456';
   function pinRule(ma, p) {
     if (p.length < 6 || p.length > 32) return 'Mật khẩu mới phải từ 6 đến 32 ký tự';
-    if (p === DEFAULT_PIN) return 'Không được dùng lại mật khẩu mặc định';
+    if (p === DEFAULT_PIN) return ''; // được phép giữ lại mật khẩu mặc định
     var low = p.toLowerCase();
     if (/^(.)\1+$/.test(p) || '01234567890'.indexOf(p) >= 0 || '09876543210'.indexOf(p) >= 0 || 'abcdefghijklmnopqrstuvwxyz'.indexOf(low) >= 0)
       return 'Mật khẩu quá dễ đoán (toàn ký tự giống nhau hoặc dãy liên tiếp)';
@@ -246,6 +246,7 @@
       return r;
     };
     var now = L.todayYMD() + ' ' + new Date().toTimeString().slice(0, 5);
+    var today = L.todayYMD(), onlyMine = me.vaiTro === 'NhanVien';
     if (mustChange && b.action !== 'login' && b.action !== 'changePin') throw new Error('Bạn cần đổi mật khẩu mặc định trước khi sử dụng.');
 
     switch (b.action) {
@@ -266,12 +267,17 @@
           types: db.types, holidays: db.holidays,
           requests: db.requests.filter(function (r) {
             if (r.trangThai === ST.CANCELLED) return false;
-            if (me.vaiTro === 'NhanVien' && r.ma !== me.ma) return false;
+            if (onlyMine && r.ma !== me.ma && !(r.tuNgay <= today && r.denNgay >= today && (r.trangThai === ST.APPROVED || r.trangThai === ST.PENDING))) return false;
             if (r.trangThai === ST.REJECTED) return r.ma === me.ma || canApprove(r);
             return true;
           }).map(function (r) {
             var o = Object.assign({}, r);
             if (!L.canSeeReason(me, byMa(r.ma))) { o.lyDo = ''; o.ghiChuDuyet = ''; }
+            if (onlyMine && r.ma !== me.ma) { // người khác: chỉ phần hôm nay
+              if (o.tuNgay !== today) o.tuBuoi = 'Sáng';
+              if (o.denNgay !== today) o.denBuoi = 'Chiều';
+              o.tuNgay = o.denNgay = today; o.ngayTao = ''; o.ngayDuyet = ''; o.nguoiDuyet = '';
+            }
             o.canApprove = canApprove(r);
             o.soNgay = L.expandLeave(r, hset).reduce(function (a, x) { return a + x.v; }, 0);
             return o;

@@ -105,6 +105,14 @@
     if (!a || !a.token || !(a.exp > Date.now())) { saveAuth(null); return null; } // bản cũ lưu Mã + PIN → bỏ, đăng nhập lại
     return a;
   }
+  /** Điện thoại: sau khi đăng nhập đưa màn hình về đúng kích thước (bỏ phóng to do lúc gõ ô nhập) */
+  function fitScreen() {
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    var vp = document.querySelector('meta[name=viewport]'), orig = vp.getAttribute('content');
+    vp.setAttribute('content', orig.replace(/,\s*maximum-scale=[^,]*/g, '') + ', maximum-scale=1');
+    setTimeout(function () { vp.setAttribute('content', orig); }, 500);
+    window.scrollTo(0, 0);
+  }
   function authFrom(res, remember) {
     return { token: res.token, exp: res.exp, remember: !!remember, ma: res.me ? res.me.ma : '' };
   }
@@ -146,6 +154,7 @@
     saveAuth({ token: Api.demoToken(ma), exp: Date.now() + 30 * 86400000, remember: true, ma: ma });
     S.form = null; S.phong = '';
     closeModal();
+    if (!$('login').hidden) fitScreen();
     loadData().then(function () { renderDemoBar(); if (S.me) toast('Đang xem với vai trò ' + (L.ROLES[S.me.vaiTro] || '') + ': ' + S.me.ten); });
   }
 
@@ -205,6 +214,7 @@
     // Nhân viên chỉ xem lịch của chính mình (máy chủ cũng không gửi đơn của người khác)
     var mineOnly = S.me.vaiTro === 'NhanVien';
     var staff = mineOnly ? [person(S.me.ma) || S.me] : filteredStaff();
+    var todayStaff = mineOnly ? activeStaff() : staff; // Hôm nay vắng mặt: nhân viên cũng xem được cả đơn vị
     var h = [];
 
     h.push('<div class="toolbar">',
@@ -218,7 +228,7 @@
 
     // Thẻ thống kê
     var todayList = [];
-    staff.forEach(function (s) {
+    todayStaff.forEach(function (s) {
       var e = S.index.byPerson[s.ma] && S.index.byPerson[s.ma][today];
       if (e) e.forEach(function (x) { todayList.push({ s: s, x: x }); });
     });
@@ -234,8 +244,8 @@
     var myPend = S.requests.filter(function (r) { return r.ma === S.me.ma && r.trangThai === ST.PENDING; }).length;
     var myY = L.yearTotals(S.index, S.me.ma, y);
 
-    h.push('<div class="stats' + (mineOnly ? ' three' : '') + '">');
-    if (!mineOnly) h.push('<div class="stat accent"><div class="k">Hôm nay vắng mặt</div><div class="v">' + todayList.length + ' <small>người</small></div><div class="names">' +
+    h.push('<div class="stats">');
+    h.push('<div class="stat accent"><div class="k">Hôm nay vắng mặt</div><div class="v">' + todayList.length + ' <small>người</small></div><div class="names">' +
       (todayList.length ? todayList.map(function (o) {
         return '<button class="person-chip' + (o.x.req.trangThai === ST.PENDING ? ' pending' : '') + '" data-req="' + esc(o.x.req.id) + '"><span class="dot" style="background:' + colorOf(o.x.req.loai) + '"></span>' +
           esc(o.s.ten) + ' <em>' + esc(o.x.req.loai) + (o.x.part !== 'full' ? ', ' + (o.x.part === 'am' ? 'sáng' : 'chiều') : '') + '</em></button>';
@@ -964,6 +974,7 @@
       btn.disabled = true; btn.textContent = 'Đang đăng nhập…'; $('loginErr').textContent = '';
       Api.call({ action: 'login', ma: ma, pin: pin, remember: remember }).then(function (res) {
         $('loginPin').value = '';
+        fitScreen();
         if (res.mustChange) { pendingFirst = { ma: ma, pin: pin, remember: remember }; showFirstPin(res.me); return; }
         saveAuth(authFrom(res, remember));
         return loadData();
@@ -979,6 +990,7 @@
       Api.call({ action: 'changePin', ma: pf.ma, pin: pf.pin, newPin: n1, remember: pf.remember }).then(function (res) {
         pendingFirst = null; f.reset();
         saveAuth(authFrom(res, pf.remember));
+        fitScreen();
         toast('Đã đổi mật khẩu. Chào ' + (res.me ? res.me.ten : '') + '!');
         return loadData();
       }).catch(function (err) { $('firstPinErr').textContent = err.message; })

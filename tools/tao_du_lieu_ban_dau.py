@@ -133,7 +133,8 @@ def main(src, out_dir='private'):
         'PIN_SALT': salt,
         'NhanSu': [{'MaNV': p['ma'], 'HoTen': p['ten'], 'Phong': p['phong'], 'ChucDanh': p['chuc'],
                     'VaiTro': p['vaitro'], 'PhuTrach': '',
-                    'PIN': hash_pin(salt, p['ma'], p['pin']), 'TrangThai': 'Đang làm'} for p in people],
+                    'PIN': ('d1$' + hash_pin(salt, p['ma'], p['pin'])[3:]) if p['pin'] == DEFAULT_PIN else hash_pin(salt, p['ma'], p['pin']),
+                    'TrangThai': 'Đang làm'} for p in people],
         'LoaiNghi': [{'Ten': t, 'TinhNghi': tinh, 'Mau': mau} for t, tinh, mau in LOAI_NGHI],
         'NgayLe': [{'Ngay': d, 'TenNgayLe': ten} for d, ten in NGAY_LE],
     }

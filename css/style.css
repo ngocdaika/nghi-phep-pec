@@ -397,3 +397,13 @@ table.sum-tbl { border-collapse: separate; border-spacing: 0; width: 100%; font-
 @media (max-width: 760px) {
   .grid-wrap { max-height: none; }
 }
+
+/* Cập nhật v9: điện thoại – ô chọn phòng cao hơn; chữ trong ô nhập ≥16px để iPhone không tự phóng to khi gõ */
+@media (max-width: 760px) {
+  input, select, textarea { font-size: 16px; }
+  .toolbar select {
+    height: 46px; min-height: 46px; padding: 0 40px 0 14px; border-radius: 10px; font-weight: 600;
+    -webkit-appearance: none; appearance: none;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+  }
+}

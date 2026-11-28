@@ -16,7 +16,7 @@ Dashboard nghỉ phép cho Trung tâm. Nhân sự tự khai ngày nghỉ, lãnh 
 | `GiamDoc` – Giám đốc | Duyệt mọi đơn. Đổi vai trò giữa Nhân viên, Trưởng/Phó phòng và Phó Giám đốc (giao phòng phụ trách). |
 | `PGD` – Phó Giám đốc | Duyệt đơn của nhân sự thuộc các phòng ghi ở cột `PhuTrach` (cách nhau bằng dấu `;`). |
 | `TruongPhong` – Trưởng/Phó phòng | Như Nhân viên, nhưng được xem tổng kết tháng/năm của mọi người. |
-| `NhanVien` – Nhân viên | Khai đơn, hủy đơn đang chờ duyệt, đổi mật khẩu. Chỉ xem lịch và tổng kết của chính mình (máy chủ không gửi đơn của người khác). |
+| `NhanVien` – Nhân viên | Khai đơn, hủy đơn đang chờ duyệt, đổi mật khẩu. Xem được **Hôm nay vắng mặt** (ai không đi làm hôm nay); ngoài ra chỉ xem lịch và tổng kết của chính mình (máy chủ chỉ gửi phần hôm nay của đơn người khác, không có lý do). |
 
 Ai duyệt đơn của ai:
 - Nhân viên, Trưởng/Phó phòng → PGĐ phụ trách phòng đó. Phòng chưa giao PGĐ → Giám đốc.
@@ -30,7 +30,7 @@ Lý do nghỉ chỉ hiện cho chính người nghỉ, người có quyền duy�
 
 - Mọi dữ liệu nằm trong file Google Sheet (4 tab: `NhanSu`, `LoaiNghi`, `NgayLe`, `DonNghi`). Chỉ chủ file và người được chia sẻ mở được. Google tự lưu lịch sử phiên bản.
 - **Mã nhân sự** dạng `tên.họđệm`, không dấu, viết thường: Nguyễn Hoàng Khánh Ngọc → `ngoc.nhk`. Trùng thì thêm số (`ngoc.nhk2`). Thêm nhân sự mà để trống ô mã thì hệ thống tự tạo.
-- **Mật khẩu mặc định `123456`**. Đăng nhập bằng mật khẩu mặc định thì phải đổi ngay (6–32 ký tự, không được toàn ký tự giống nhau, dãy liên tiếp hay trùng mã), chưa đổi thì không xem được gì. Tab Quản trị đánh dấu **Chưa đổi MK** cho người còn dùng mật khẩu mặc định — nhắc họ đăng nhập sớm, vì ai biết mã của họ cũng vào được bằng `123456`. Mỗi lần đổi mật khẩu được ghi vào tab `NhatKy`.
+- **Mật khẩu mặc định `123456`**. Tài khoản mới tạo / vừa đặt lại (lưu dạng `d1$…`) đăng nhập lần đầu phải qua màn hình đổi mật khẩu, chưa đổi thì không xem được gì. Mật khẩu mới 6–32 ký tự, không được toàn ký tự giống nhau, dãy liên tiếp hay trùng mã; riêng `123456` được phép giữ lại (sau đó không bị hỏi nữa). Tab Quản trị đánh dấu **Chưa đổi MK** cho người còn dùng mật khẩu mặc định — nhắc họ đăng nhập sớm, vì ai biết mã của họ cũng vào được bằng `123456`. Mỗi lần đổi mật khẩu được ghi vào tab `NhatKy`.
 - Mật khẩu (cột `PIN`) lưu **dạng mã hóa** (`h1$…`), ai mở Sheet cũng không đọc được. Quên mật khẩu thì Quản trị **đặt lại mật khẩu** (về `123456`) trong tab Quản trị.
 - **Giữ đăng nhập 30 ngày**: đánh dấu ô này khi đăng nhập thì 30 ngày không phải đăng nhập lại; không đánh dấu thì đóng trình duyệt (hoặc sau 12 giờ) là phải đăng nhập lại. Trình duyệt chỉ giữ **mã phiên** do máy chủ ký, không lưu mật khẩu. Đổi mật khẩu hoặc Quản trị đặt lại mật khẩu → mọi máy đang đăng nhập tài khoản đó bị thoát.
 - Đổi mật khẩu ở tab Cá nhân phải nhập mật khẩu hiện tại.

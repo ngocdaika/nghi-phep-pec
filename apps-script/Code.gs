@@ -16,7 +16,9 @@
  * Đăng nhập xong máy chủ cấp mã phiên có ký (12 giờ, hoặc 30 ngày nếu chọn "Giữ đăng nhập"); trình duyệt không lưu mật khẩu.
  * Đổi mật khẩu → mọi phiên cũ trên các máy khác hết hiệu lực.
  * Nâng cấp file dữ liệu cũ (mã NS01…): chạy hàm capNhatV3() một lần.
- * Mật khẩu (cột PIN) lưu dạng mã hóa (h1$…). Ô PIN ghi chữ/số thường cũng được: lần đăng nhập đầu sẽ tự mã hóa.
+ * Mật khẩu (cột PIN) lưu dạng mã hóa: h1$… = mật khẩu riêng; d1$… = mật khẩu mặc định, bắt buộc đổi khi đăng nhập.
+ * Mật khẩu mới được phép trùng 123456 (khi đó không bị hỏi lại). Ô PIN ghi chữ/số thường cũng được: lần đăng nhập đầu tự mã hóa.
+ * Nâng cấp lên cách đánh dấu d1$: chạy capNhatV4() một lần.
  * Bản demo (?demo=1) đọc họ tên/phòng/chức danh từ tab NhanSu. Tắt: Project Settings > Script Properties, thêm DEMO = off.
  */
 
@@ -42,7 +44,7 @@ var LOCK_SECONDS = 900;
 var GLOBAL_FAILS_10M = 30;  // cả hệ thống sai quá 30 lần / 10 phút → tạm dừng đăng nhập 10 phút
 var GLOBAL_FAILS_6H = 200;  // cả hệ thống sai quá 200 lần / 6 giờ → tạm dừng 1 giờ
 var MAX_PENDING = 30;       // số đơn chờ duyệt tối đa của một người
-var DEFAULT_PIN = '123456'; // mật khẩu mặc định khi tạo / đặt lại tài khoản – bắt buộc đổi ở lần đăng nhập đầu
+var DEFAULT_PIN = '123456'; // mật khẩu khi tạo / đặt lại tài khoản – lưu dạng d1$…, bắt buộc đổi ở lần đăng nhập đầu
 var SESSION_HOURS = 12;     // phiên thường
 var REMEMBER_DAYS = 30;     // phiên "Giữ đăng nhập 30 ngày"
 var MSG_SESSION = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
@@ -80,7 +82,7 @@ function setup() {
   // Mã hóa mọi PIN đang ghi dạng số thường
   var n = 0;
   staff_().forEach(function (s) {
-    if (s.pin && s.pin.indexOf('h1$') !== 0) { writeStaff_(s._row, { PIN: hashPin_(s.ma, s.pin) }); n++; }
+    if (s.pin && !isHashed_(s.pin)) { writeStaff_(s._row, { PIN: s.pin === DEFAULT_PIN ? defaultHash_(s.ma) : hashPin_(s.ma, s.pin) }); n++; }
   });
   return 'OK – đã mã hóa ' + n + ' PIN';
 }
@@ -159,7 +161,7 @@ function capNhatV3() {
       var nm = makeMa_(r.ten, taken);
       map[r.ma] = nm;
       t.sheet.getRange(r.row, cMa).setValue(nm);
-      t.sheet.getRange(r.row, cPin).setNumberFormat('@').setValue(hashPin_(nm, DEFAULT_PIN));
+      t.sheet.getRange(r.row, cPin).setNumberFormat('@').setValue(defaultHash_(nm));
       list.push(r.ma.toUpperCase() + ' → ' + nm);
     } else if (r.raw !== r.ma) {
       t.sheet.getRange(r.row, cMa).setValue(r.ma); // chữ thường, mật khẩu giữ nguyên (mã hóa không phân biệt hoa thường)
@@ -318,6 +320,29 @@ function hashPin_(ma, pin) {
   var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt_() + '|' + String(ma).toUpperCase() + '|' + pin, Utilities.Charset.UTF_8);
   return 'h1$' + Utilities.base64Encode(bytes);
 }
+/** Mật khẩu mặc định 123456, đánh dấu d1$ = bắt buộc đổi khi đăng nhập */
+function defaultHash_(ma) { return 'd1$' + hashPin_(ma, DEFAULT_PIN).slice(3); }
+function isHashed_(v) { return /^[hd]1\$/.test(v); }
+function mustChange_(p) { return p.pin.indexOf('d1$') === 0 || p.pin === DEFAULT_PIN; }
+function pinMatches_(p, pin) {
+  if (isHashed_(p.pin)) return p.pin.slice(3) === hashPin_(p.ma, pin).slice(3);
+  return p.pin !== '' && p.pin === pin;
+}
+
+/**
+ * Chạy một lần sau khi cập nhật bản 28/11 (tối): tài khoản còn mật khẩu mặc định 123456 dạng h1$ → d1$
+ * để vẫn bị bắt đổi khi đăng nhập (từ bản này người dùng được phép tự chọn lại 123456 mà không bị hỏi lại).
+ */
+function capNhatV4() {
+  var n = 0;
+  withLock_(function () {
+    staff_().forEach(function (s) {
+      if (s.pin.indexOf('h1$') === 0 && s.pin === hashPin_(s.ma, DEFAULT_PIN)) { writeStaff_(s._row, { PIN: defaultHash_(s.ma) }); n++; }
+    });
+  });
+  log_('Đánh dấu ' + n + ' tài khoản còn mật khẩu mặc định (d1$)', '');
+  return 'OK – ' + n + ' tài khoản';
+}
 
 /* ---------- Mã phiên đăng nhập: v1~ma~hạn~nhớ~chữ ký HMAC (ký kèm mật khẩu đã mã hóa → đổi mật khẩu là phiên cũ hết hiệu lực) ---------- */
 
@@ -364,7 +389,7 @@ function auth_(b) {
   var staff = staff_();
   var me = null;
   for (var i = 0; i < staff.length; i++) if (staff[i].ma === ma) me = staff[i];
-  return { me: me, staff: staff, mustChange: pin === DEFAULT_PIN };
+  return { me: me, staff: staff, mustChange: mustChange_(me) };
 }
 
 /** Kiểm tra mật khẩu, có đếm số lần sai. Giữ chỗ một lần thử TRƯỚC khi kiểm tra → gửi song song cũng không vượt quá MAX_FAILS */
@@ -372,14 +397,14 @@ function checkPin_(ma, pin) {
   reserveAttempt_(ma);
   var me = null;
   staff_().forEach(function (s) { if (s.ma === ma) me = s; });
-  var hashed = me && me.pin.indexOf('h1$') === 0;
-  var ok = !!me && me.trangThai !== 'Nghỉ việc' && (hashed ? me.pin === hashPin_(ma, pin) : me.pin !== '' && me.pin === pin);
+  var hashed = me && isHashed_(me.pin);
+  var ok = !!me && me.trangThai !== 'Nghỉ việc' && pinMatches_(me, pin);
   if (!ok) {
     recordFail_(ma);
     throw new Error('Mã NV hoặc mật khẩu không đúng');
   }
   releaseAttempt_(ma);
-  if (!hashed) withLock_(function () { writeStaff_(me._row, { PIN: hashPin_(ma, pin) }); });
+  if (!hashed) withLock_(function () { writeStaff_(me._row, { PIN: pin === DEFAULT_PIN ? defaultHash_(ma) : hashPin_(ma, pin) }); });
 }
 
 /** Bản demo: chỉ họ tên, phòng, chức danh, vai trò của người đang làm (không có mã, mật khẩu, đơn nghỉ) */
@@ -496,19 +521,26 @@ function getData_(ctx) {
     var o = { ma: s.ma, ten: s.ten, phong: s.phong, chucDanh: s.chucDanh, vaiTro: s.vaiTro, phuTrach: s.phuTrach,
               trangThai: s.trangThai };
     // Người quản lý thấy ai còn dùng mật khẩu mặc định (chưa đăng nhập lần nào)
-    if (manage) o.chuaDoiMK = s.pin === '' || s.pin === DEFAULT_PIN || s.pin === hashPin_(s.ma, DEFAULT_PIN);
+    if (manage) o.chuaDoiMK = s.pin === '' || mustChange_(s);
     return o;
   });
-  var onlyMine = ctx.me.vaiTro === 'NhanVien'; // Nhân viên chỉ nhận đơn của chính mình (không xem ai nghỉ ngày nào)
+  // Nhân viên: đơn của mình đầy đủ; đơn người khác chỉ nhận phần hôm nay (để biết hôm nay ai vắng), không xem ai nghỉ ngày nào
+  var onlyMine = ctx.me.vaiTro === 'NhanVien';
+  var today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
   var reqs = requests_().filter(function (r) {
     if (r.trangThai === ST.CANCELLED) return false;
-    if (onlyMine && r.ma !== ctx.me.ma) return false;
+    if (onlyMine && r.ma !== ctx.me.ma && !(r.tuNgay <= today && r.denNgay >= today && (r.trangThai === ST.APPROVED || r.trangThai === ST.PENDING))) return false;
     if (r.trangThai === ST.REJECTED) return r.ma === ctx.me.ma || canApprove_(ctx, r);
     return true;
   }).map(function (r) {
     var o = {};
     for (var k in r) if (k !== '_row') o[k] = r[k];
     if (!canSeeReason_(ctx, r)) { o.lyDo = ''; o.ghiChuDuyet = ''; }
+    if (onlyMine && r.ma !== ctx.me.ma) {
+      if (o.tuNgay !== today) o.tuBuoi = 'Sáng';
+      if (o.denNgay !== today) o.denBuoi = 'Chiều';
+      o.tuNgay = o.denNgay = today; o.soNgay = ''; o.ngayTao = ''; o.ngayDuyet = ''; o.nguoiDuyet = '';
+    }
     o.canApprove = canApprove_(ctx, r);
     return o;
   });
@@ -625,7 +657,7 @@ function changePin_(ctx, newPin, oldPin, remember) {
 }
 function pinRule_(ma, p) {
   if (p.length < 6 || p.length > 32) return 'Mật khẩu mới phải từ 6 đến 32 ký tự';
-  if (p === DEFAULT_PIN) return 'Không được dùng lại mật khẩu mặc định';
+  if (p === DEFAULT_PIN) return ''; // được phép giữ lại mật khẩu mặc định
   var low = p.toLowerCase();
   if (/^(.)\1+$/.test(p) || '01234567890'.indexOf(p) >= 0 || '09876543210'.indexOf(p) >= 0 || 'abcdefghijklmnopqrstuvwxyz'.indexOf(low) >= 0)
     return 'Mật khẩu quá dễ đoán (toàn ký tự giống nhau hoặc dãy liên tiếp)';
@@ -677,7 +709,7 @@ function saveStaff_(ctx, d, isNew) {
   if (isNew) {
     if (target) throw new Error('Mã NV ' + ma + ' đã tồn tại');
     values.MaNV = ma;
-    values.PIN = hashPin_(ma, DEFAULT_PIN);
+    values.PIN = defaultHash_(ma);
     var t = table_('NhanSu');
     t.sheet.appendRow(t.head.map(function (h) { return values[h] !== undefined ? safe_(values[h]) : ''; }));
     return { saved: ma, pin: DEFAULT_PIN };
@@ -691,7 +723,7 @@ function resetPin_(ctx, targetMa) {
   requireAdmin_(ctx);
   var target = personOf_(ctx, normMa_(targetMa));
   if (!target) throw new Error('Không tìm thấy nhân sự');
-  writeStaff_(target._row, { PIN: hashPin_(target.ma, DEFAULT_PIN) });
+  writeStaff_(target._row, { PIN: defaultHash_(target.ma) });
   CacheService.getScriptCache().remove('try_' + target.ma);
   log_('Quản trị đặt lại mật khẩu mặc định (bởi ' + ctx.me.ma + ')', target.ma);
   return { ma: target.ma, pin: DEFAULT_PIN };
