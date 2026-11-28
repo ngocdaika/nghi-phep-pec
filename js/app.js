@@ -17,8 +17,14 @@
     { id: 'form', label: 'Khai nghỉ', icon: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>' },
     { id: 'approve', label: 'Duyệt', approver: true, icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>' },
     { id: 'summary', label: 'Tổng kết', icon: '<path d="M3 3v18h18"/><path d="M7 16v-5M12 16V7M17 16v-8"/>' },
-    { id: 'me', label: 'Cá nhân', icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>' }
+    { id: 'me', label: 'Cá nhân', icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>' },
+    { id: 'admin', label: 'Quản trị', manage: true, icon: '<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/>' }
   ];
+  function canView(v) {
+    if (v.approver) return !!(S.me && S.me.isApprover);
+    if (v.manage) return !!(S.me && S.me.canManage);
+    return true;
+  }
 
   /* ---------------- Tiện ích ---------------- */
   function $(id) { return document.getElementById(id); }
@@ -61,17 +67,26 @@
     if (!p) return 0;
     return (Number(p.phepNam) || 0) + (Number(p.phepTon) || 0) - L.yearTotals(S.index, ma, y).phep;
   }
+  /** Nhân sự hiện trên lịch: đang làm và có phòng (tài khoản quản trị không thuộc phòng nào thì ẩn) */
+  function activeStaff() { return S.staff.filter(function (s) { return s.phong && s.trangThai !== 'Nghỉ việc'; }); }
   function phongList() {
     var seen = {}, out = [];
-    S.staff.forEach(function (s) { if (!seen[s.phong]) { seen[s.phong] = 1; out.push(s.phong); } });
+    activeStaff().forEach(function (s) { if (!seen[s.phong]) { seen[s.phong] = 1; out.push(s.phong); } });
     return out;
   }
-  function filteredStaff() { return S.staff.filter(function (s) { return !S.phong || s.phong === S.phong; }); }
+  function filteredStaff() { return activeStaff().filter(function (s) { return !S.phong || s.phong === S.phong; }); }
+  function approverText(p) {
+    if (!p || !p.ma) return '';
+    var list = L.primaryApprovers(S.staff, p);
+    return list.length ? list.map(function (s) { return s.ten; }).join(' hoặc ') : '';
+  }
+  function roleChip(role) { return '<span class="role ' + esc(role) + '">' + esc(L.ROLES[role] || role) + '</span>'; }
   function phongSelect(id) {
     return '<select id="' + id + '" aria-label="Lọc theo phòng"><option value="">Tất cả phòng</option>' +
       phongList().map(function (p) { return '<option' + (p === S.phong ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') +
       '</select>';
   }
+  function ownCancelable(r) { return r.ma === S.me.ma && (r.trangThai === ST.PENDING || r.nguoiDuyet === '(tự động)'); }
   function pendingForMe() { return S.requests.filter(function (r) { return r.canApprove && r.trangThai === ST.PENDING; }); }
 
   /* ---------------- Đăng nhập & dữ liệu ---------------- */
@@ -115,7 +130,7 @@
   /* ---------------- Điều hướng ---------------- */
   function renderTabs() {
     var pend = pendingForMe().length;
-    $('tabs').innerHTML = VIEWS.filter(function (v) { return !v.approver || (S.me && S.me.isApprover); }).map(function (v) {
+    $('tabs').innerHTML = VIEWS.filter(canView).map(function (v) {
       return '<button type="button" class="tab' + (v.id === S.view ? ' active' : '') + '" data-view="' + v.id + '" title="' + v.label + '">' +
         SVG + v.icon + '</svg><span class="lbl">' + v.label + '</span>' +
         (v.id === 'approve' && pend ? '<span class="badge">' + pend + '</span>' : '') + '</button>';
@@ -123,14 +138,15 @@
   }
 
   function show(view) {
-    if (view === 'approve' && !(S.me && S.me.isApprover)) view = 'calendar';
+    var vdef = VIEWS.filter(function (v) { return v.id === view; })[0];
+    if (!vdef || !canView(vdef)) view = 'calendar';
     S.view = view;
     VIEWS.forEach(function (v) { $('view-' + v.id).hidden = v.id !== view; });
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
       b.classList.toggle('active', b.getAttribute('data-view') === view);
     });
     if (location.hash !== '#' + view) history.replaceState(null, '', '#' + view);
-    ({ calendar: renderCalendar, form: renderForm, approve: renderApprove, summary: renderSummary, me: renderMe })[view]();
+    ({ calendar: renderCalendar, form: renderForm, approve: renderApprove, summary: renderSummary, me: renderMe, admin: renderAdmin })[view]();
     window.scrollTo(0, 0);
   }
 
@@ -275,7 +291,7 @@
       acts.push('<button class="btn ok" data-approve="' + esc(r.id) + '">✓ Duyệt</button>');
       acts.push('<button class="btn bad" data-reject="' + esc(r.id) + '">Từ chối</button>');
     }
-    if (r.ma === S.me.ma && r.trangThai === ST.PENDING) acts.push('<button class="btn bad" data-cancel="' + esc(r.id) + '">Hủy đơn</button>');
+    if (ownCancelable(r)) acts.push('<button class="btn bad" data-cancel="' + esc(r.id) + '">Hủy đơn</button>');
     else if (r.canApprove && r.trangThai !== ST.PENDING) acts.push('<button class="btn bad" data-cancel="' + esc(r.id) + '">Xóa đơn</button>');
     var extra = '';
     if (opt.stats) {
@@ -327,7 +343,7 @@
   }
   function cancelAsk(id) {
     var r = findReq(id);
-    var own = r.ma === S.me.ma && r.trangThai === ST.PENDING;
+    var own = ownCancelable(r);
     openModal('<h3>' + (own ? 'Hủy đơn nghỉ?' : 'Xóa đơn nghỉ của ' + esc(r.ten) + '?') + '</h3><p>' + esc(r.loai + ' · ' + fmtRange(r) + ' · ' + L.fmtNum(countOf(r)) + ' ngày') + '</p>' +
       '<p class="muted small">Đơn sẽ không còn hiện trên lịch và không được tính vào tổng. Sheet vẫn lưu lại với trạng thái "Đã hủy".</p>' +
       '<div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end"><button class="btn" data-close>Thôi</button>' +
@@ -345,7 +361,7 @@
     var f = S.form, h = [];
     h.push('<div class="card" style="max-width:760px;margin:0 auto"><h2>Khai báo nghỉ phép</h2><form id="leaveForm" class="form-grid" novalidate>');
     if (S.me.isAdmin) {
-      h.push('<label class="full">Người nghỉ<select name="ma">' + S.staff.map(function (s) {
+      h.push('<label class="full">Người nghỉ<select name="ma">' + S.staff.filter(function (s) { return s.trangThai !== 'Nghỉ việc'; }).map(function (s) {
         return '<option value="' + esc(s.ma) + '"' + (s.ma === f.ma ? ' selected' : '') + '>' + esc(s.ten + ' – ' + s.phong) + '</option>';
       }).join('') + '</select></label>');
     }
@@ -373,8 +389,8 @@
     if (!box) return;
     var err = L.validateRange(f);
     var p = person(f.ma) || {};
-    var approver = p.nguoiDuyet ? person(p.nguoiDuyet) : null;
-    var who = p.nguoiDuyet ? 'Đơn sẽ chờ <b>' + esc(approver ? approver.ten : p.nguoiDuyet) + '</b> duyệt.' : 'Đơn được <b>duyệt tự động</b>.';
+    var appr = approverText(p);
+    var who = appr ? 'Đơn sẽ chờ <b>' + esc(appr) + '</b> duyệt.' : 'Đơn được <b>duyệt tự động</b>.';
     if (err) { box.innerHTML = '<span class="err">' + esc(err) + '</span>'; $('submitLeave').disabled = true; return; }
     var days = L.expandLeave(f, S.holidays), total = days.reduce(function (a, x) { return a + x.v; }, 0);
     $('submitLeave').disabled = !total;
@@ -503,11 +519,15 @@
   function renderMe() {
     var me = S.me, y = new Date().getFullYear(), p = person(me.ma) || {}, yt = L.yearTotals(S.index, me.ma, y);
     var mine = S.requests.filter(function (r) { return r.ma === me.ma; }).sort(function (a, b) { return a.tuNgay < b.tuNgay ? 1 : -1; });
-    var approver = p.nguoiDuyet ? person(p.nguoiDuyet) : null;
+    var appr = approverText(p);
+    var scope = me.vaiTro === 'PGD' ? L.phuTrachList(me) : [];
     $('view-me').innerHTML =
-      '<div class="card"><div class="me-head"><div class="avatar">' + esc(initials(me.ten)) + '</div><div><h2 style="margin:0">' + esc(me.ten) + '</h2>' +
-      '<div class="muted">' + esc(me.chucDanh + ' · ' + me.phong) + ' · Mã ' + esc(me.ma) + '</div>' +
-      '<div class="muted small">Người duyệt: ' + (p.nguoiDuyet ? esc(approver ? approver.ten : p.nguoiDuyet) : 'duyệt tự động') + '</div></div></div>' +
+      '<div class="card"><div class="me-head"><div class="avatar">' + esc(initials(me.ten)) + '</div><div><h2 style="margin:0">' + esc(me.ten) + ' ' + roleChip(me.vaiTro) + '</h2>' +
+      '<div class="muted">' + esc([me.chucDanh, me.phong].filter(Boolean).join(' · ')) + ' · Mã ' + esc(me.ma) + '</div>' +
+      '<div class="muted small">Người duyệt đơn của tôi: ' + (appr ? esc(appr) : 'duyệt tự động') + '</div>' +
+      (me.vaiTro === 'PGD' ? '<div class="muted small">Phụ trách duyệt: ' + (scope.length ? esc(scope.join(', ')) : 'chưa được giao phòng nào') + '</div>' : '') +
+      (me.vaiTro === 'GiamDoc' || me.vaiTro === 'Admin' ? '<div class="muted small">Được duyệt đơn của tất cả nhân sự</div>' : '') +
+      '</div></div>' +
       '<div class="kv"><div><b>' + L.fmtNum(yt.total) + '</b><span>Đã nghỉ năm ' + y + '</span></div>' +
       '<div><b' + (remaining(me.ma, y) < 0 ? ' style="color:var(--bad)"' : '') + '>' + L.fmtNum(remaining(me.ma, y)) + '</b><span>Phép năm còn lại (trên ' + L.fmtNum((Number(p.phepNam) || 0) + (Number(p.phepTon) || 0)) + ')</span></div>' +
       '<div><b>' + L.fmtNum(yt.pending) + '</b><span>Ngày chờ duyệt</span></div></div></div>' +
@@ -518,6 +538,125 @@
       '<div class="full"><button class="btn primary" type="submit">Đổi PIN</button></div></form></div>' +
       '<div class="card" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="refresh">↻ Tải lại dữ liệu</button><button class="btn bad" data-act="logout">Đăng xuất</button>' +
       (Api.demo ? '<button class="btn" data-act="resetDemo">Đặt lại dữ liệu demo</button>' : '') + '</div>';
+  }
+
+  /* ---------------- Quản trị ---------------- */
+  var ROLE_ORDER = { Admin: 0, GiamDoc: 1, PGD: 2, NhanVien: 3 };
+  function allPhong() {
+    var seen = {}, out = [];
+    S.staff.forEach(function (s) { if (s.phong && !seen[s.phong]) { seen[s.phong] = 1; out.push(s.phong); } });
+    return out;
+  }
+
+  function renderAdmin() {
+    var isAdmin = S.me.isAdmin, h = [];
+    var list = S.staff.slice().sort(function (a, b) {
+      return (a.trangThai === 'Nghỉ việc') - (b.trangThai === 'Nghỉ việc') || ROLE_ORDER[a.vaiTro] - ROLE_ORDER[b.vaiTro];
+    });
+    h.push('<div class="toolbar"><h2>Quản trị</h2><span class="spacer"></span>' +
+      (isAdmin ? '<button class="btn primary" data-act="addStaff">+ Thêm nhân sự</button>' : '') + '</div>');
+    if (!isAdmin) h.push('<div class="card small muted">Giám đốc được nâng tài khoản lên Phó Giám đốc (và giao phòng phụ trách) hoặc hạ về Cá nhân. Các thay đổi khác do quản trị viên thực hiện.</div>');
+
+    // Phân công duyệt theo phòng
+    h.push('<div class="card"><h2>Ai duyệt đơn của từng phòng</h2>' + allPhong().map(function (ph) {
+      var pgd = S.staff.filter(function (s) { return s.trangThai !== 'Nghỉ việc' && s.vaiTro === 'PGD' && L.phuTrachList(s).indexOf(ph) >= 0; });
+      return '<div class="assign-row"><span>' + esc(ph) + '</span><span class="who">' +
+        (pgd.length ? pgd.map(function (s) { return '<b>' + esc(s.ten) + '</b>'; }).join(', ') : '<span class="muted">Chưa giao PGĐ — Giám đốc duyệt</span>') + '</span></div>';
+    }).join('') + '<div class="small muted" style="margin-top:8px">Giám đốc và Quản trị luôn duyệt được mọi đơn. Đơn của Phó Giám đốc do Giám đốc duyệt.</div></div>');
+
+    // Bảng tài khoản
+    h.push('<div class="card"><h2>Tài khoản (' + S.staff.length + ')</h2><div class="tbl-wrap"><table class="sum-tbl adm-tbl"><thead><tr>' +
+      '<th>Họ tên</th><th>Mã</th><th>Vai trò</th><th>Phòng</th><th>Phụ trách duyệt</th><th>Phép năm + tồn</th><th>Trạng thái</th><th></th></tr></thead><tbody>');
+    list.forEach(function (s) {
+      var editable = isAdmin || s.vaiTro === 'NhanVien' || s.vaiTro === 'PGD';
+      h.push('<tr' + (s.trangThai === 'Nghỉ việc' ? ' class="off"' : '') + '><td>' + esc(s.ten) + '<div class="small muted">' + esc(s.chucDanh) + '</div></td>' +
+        '<td>' + esc(s.ma) + '</td><td>' + roleChip(s.vaiTro) + '</td><td>' + esc(s.phong || '—') + '</td>' +
+        '<td class="wrap">' + esc(s.vaiTro === 'PGD' ? (L.phuTrachList(s).join(', ') || 'chưa giao') : '') + '</td>' +
+        '<td>' + L.fmtNum(s.phepNam) + ' + ' + L.fmtNum(s.phepTon) + '</td><td>' + esc(s.trangThai) + '</td>' +
+        '<td>' + (editable ? '<button class="btn" data-edit-staff="' + esc(s.ma) + '">Sửa</button>' : '') + '</td></tr>');
+    });
+    h.push('</tbody></table></div></div>');
+
+    if (isAdmin) {
+      h.push('<div class="adm-grid"><div class="card"><h2>Loại nghỉ</h2><form id="typesForm"><div class="ed-list" id="typeRows">' +
+        S.types.map(typeRow).join('') + '</div><div class="ed-foot"><button type="button" class="btn" data-act="addTypeRow">+ Thêm loại</button>' +
+        '<button class="btn primary" type="submit">Lưu loại nghỉ</button></div>' +
+        '<div class="small muted" style="margin-top:8px">"Trừ phép" = số ngày nghỉ loại này được trừ vào phép năm.</div></form></div>');
+      var hol = Object.keys(S.holidays).sort().map(function (d) { return { ngay: d, ten: S.holidayName[d] }; });
+      h.push('<div class="card"><h2>Ngày lễ (không tính ngày nghỉ)</h2><form id="holidaysForm"><div class="ed-list" id="holRows">' +
+        hol.map(holRow).join('') + '</div><div class="ed-foot"><button type="button" class="btn" data-act="addHolRow">+ Thêm ngày lễ</button>' +
+        '<button class="btn primary" type="submit">Lưu ngày lễ</button></div></form></div></div>');
+    }
+    $('view-admin').innerHTML = h.join('');
+  }
+
+  function typeRow(t) {
+    t = t || { ten: '', truPhep: false, mau: '#64748B' };
+    return '<div class="ed-row"><input name="ten" value="' + esc(t.ten) + '" placeholder="Tên loại nghỉ" maxlength="60">' +
+      '<label class="ck"><input type="checkbox" name="tru"' + (t.truPhep ? ' checked' : '') + '> Trừ phép</label>' +
+      '<input type="color" name="mau" value="' + esc(/^#[0-9a-f]{6}$/i.test(t.mau) ? t.mau : '#64748B') + '" aria-label="Màu">' +
+      '<button type="button" class="btn icon del" data-delrow aria-label="Xóa">×</button></div>';
+  }
+  function holRow(x) {
+    x = x || { ngay: '', ten: '' };
+    return '<div class="ed-row"><input type="date" name="ngay" value="' + esc(x.ngay) + '">' +
+      '<input name="ten" value="' + esc(x.ten) + '" placeholder="Tên ngày lễ" maxlength="80">' +
+      '<button type="button" class="btn icon del" data-delrow aria-label="Xóa">×</button></div>';
+  }
+
+  function staffForm(ma) {
+    var isNew = !ma, isAdmin = S.me.isAdmin;
+    var s = isNew ? { ma: '', ten: '', phong: '', chucDanh: '', vaiTro: 'NhanVien', phuTrach: '', phepNam: 12, phepTon: 0, trangThai: 'Đang làm' } : person(ma);
+    var dis = isAdmin ? '' : ' disabled';
+    var roles = isAdmin ? ['NhanVien', 'PGD', 'GiamDoc', 'Admin'] : ['NhanVien', 'PGD'];
+    var scope = L.phuTrachList(s);
+    openModal('<h3>' + (isNew ? 'Thêm nhân sự' : 'Tài khoản ' + esc(s.ten)) + '</h3><form id="staffForm" class="form-grid" data-new="' + (isNew ? 1 : 0) + '">' +
+      '<label>Mã NV<input name="ma" value="' + esc(s.ma) + '"' + (isNew ? ' required maxlength="20" placeholder="VD: NS41"' : ' readonly') + '></label>' +
+      '<label>Họ tên<input name="ten" value="' + esc(s.ten) + '" required' + dis + '></label>' +
+      '<label>Phòng<input name="phong" list="phongList" value="' + esc(s.phong) + '"' + dis + ' placeholder="Để trống: không hiện trên lịch"></label>' +
+      '<datalist id="phongList">' + allPhong().map(function (p) { return '<option value="' + esc(p) + '">'; }).join('') + '</datalist>' +
+      '<label>Chức danh<input name="chucDanh" value="' + esc(s.chucDanh) + '"' + dis + '></label>' +
+      '<label>Vai trò<select name="vaiTro">' + roles.map(function (r) {
+        return '<option value="' + r + '"' + (r === s.vaiTro ? ' selected' : '') + '>' + L.ROLES[r] + '</option>';
+      }).join('') + '</select></label>' +
+      '<label>Trạng thái<select name="trangThai"' + dis + '><option' + (s.trangThai !== 'Nghỉ việc' ? ' selected' : '') + '>Đang làm</option><option' + (s.trangThai === 'Nghỉ việc' ? ' selected' : '') + '>Nghỉ việc</option></select></label>' +
+      '<div class="full" id="phuTrachBox"' + (s.vaiTro === 'PGD' ? '' : ' hidden') + '><b class="small">Phòng phụ trách duyệt</b><div class="ck-list">' +
+      allPhong().map(function (p) {
+        return '<label><input type="checkbox" name="phuTrach" value="' + esc(p) + '"' + (scope.indexOf(p) >= 0 ? ' checked' : '') + '> ' + esc(p) + '</label>';
+      }).join('') + '</div></div>' +
+      '<label>Phép năm (ngày)<input name="phepNam" type="number" step="0.5" min="0" value="' + esc(s.phepNam) + '"' + dis + '></label>' +
+      '<label>Phép tồn năm trước<input name="phepTon" type="number" step="0.5" min="0" value="' + esc(s.phepTon) + '"' + dis + '></label>' +
+      '<div class="full" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">' +
+      (isAdmin && !isNew ? '<button type="button" class="btn" data-reset-pin="' + esc(s.ma) + '" style="margin-right:auto">Đặt lại PIN</button>' : '') +
+      '<button type="button" class="btn" data-close>Thôi</button><button class="btn primary" type="submit">' + (isNew ? 'Tạo tài khoản' : 'Lưu') + '</button></div>' +
+      '</form>');
+  }
+
+  function showPin(ten, ma, pin, title) {
+    openModal('<h3>' + esc(title) + '</h3><p>Mã NV <b>' + esc(ma) + '</b> – ' + esc(ten) + '</p><div class="pin-box">' + esc(pin) + '</div>' +
+      '<p class="small muted">Gửi riêng PIN này cho người dùng. PIN chỉ hiện một lần; hệ thống lưu dạng mã hóa nên không ai xem lại được. Người dùng nên đổi PIN ở tab Cá nhân.</p>' +
+      '<div style="text-align:right"><button class="btn primary" data-close>Đã ghi lại</button></div>');
+  }
+
+  function submitStaff(f) {
+    var isNew = f.getAttribute('data-new') === '1', el = f.elements;
+    var data = { ma: el.ma.value.trim().toUpperCase(), vaiTro: el.vaiTro.value,
+                 phuTrach: Array.prototype.filter.call(f.querySelectorAll('input[name=phuTrach]'), function (c) { return c.checked; }).map(function (c) { return c.value; }) };
+    if (S.me.isAdmin) {
+      data.ten = el.ten.value; data.phong = el.phong.value; data.chucDanh = el.chucDanh.value;
+      data.trangThai = el.trangThai.value; data.phepNam = el.phepNam.value; data.phepTon = el.phepTon.value;
+    }
+    if (data.vaiTro === 'PGD' && !data.phuTrach.length && !confirm('Phó Giám đốc chưa được giao phòng nào. Vẫn lưu?')) return;
+    call('saveStaff', { staff: data, isNew: isNew }).then(function (res) {
+      return loadData(true).then(function () {
+        if (res.pin) showPin(data.ten, data.ma, res.pin, 'Đã tạo tài khoản');
+        else { closeModal(); toast('Đã lưu tài khoản ' + data.ma); }
+      });
+    }).catch(function (e) { toast(e.message, true); });
+  }
+
+  function collectRows(id, fn) {
+    return Array.prototype.map.call($(id).querySelectorAll('.ed-row'), fn);
   }
 
   /* ---------------- Sự kiện ---------------- */
@@ -557,8 +696,24 @@
       S.form.tuNgay = q[0]; S.form.tuBuoi = q[1]; S.form.denNgay = q[2]; S.form.denBuoi = q[3];
       renderForm(); return;
     }
+    if ((a = t.getAttribute('data-edit-staff'))) { staffForm(a); return; }
+    if ((a = t.getAttribute('data-reset-pin'))) {
+      var rp = person(a);
+      openModal('<h3>Đặt lại PIN cho ' + esc(rp.ten) + '?</h3><p class="muted">PIN cũ sẽ không dùng được nữa. Hệ thống tạo PIN mới 6 số để anh/chị gửi riêng cho người này.</p>' +
+        '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-close>Thôi</button><button class="btn primary" data-reset-pin-confirm="' + esc(a) + '">Đặt lại PIN</button></div>');
+      return;
+    }
+    if ((a = t.getAttribute('data-reset-pin-confirm'))) {
+      call('resetPin', { target: a }).then(function (res) { var p2 = person(res.ma); showPin(p2 ? p2.ten : '', res.ma, res.pin, 'PIN mới'); })
+        .catch(function (e) { toast(e.message, true); });
+      return;
+    }
+    if (t.hasAttribute('data-delrow')) { t.closest('.ed-row').remove(); return; }
     if ((a = t.getAttribute('data-act'))) {
       switch (a) {
+        case 'addStaff': staffForm(null); return;
+        case 'addTypeRow': $('typeRows').insertAdjacentHTML('beforeend', typeRow()); $('typeRows').lastElementChild.querySelector('input').focus(); return;
+        case 'addHolRow': $('holRows').insertAdjacentHTML('beforeend', holRow()); $('holRows').lastElementChild.querySelector('input').focus(); return;
         case 'prev': if (--S.m < 1) { S.m = 12; S.y--; } renderCalendar(); break;
         case 'next': if (++S.m > 12) { S.m = 1; S.y++; } renderCalendar(); break;
         case 'thisMonth': S.y = new Date().getFullYear(); S.m = new Date().getMonth() + 1; renderCalendar(); break;
@@ -581,6 +736,7 @@
     var t = e.target;
     if (t.id === 'calPhong') { S.phong = t.value; renderCalendar(); }
     if (t.id === 'sumPhong') { S.phong = t.value; renderSummary(); }
+    if (t.name === 'vaiTro' && t.form && t.form.id === 'staffForm') $('phuTrachBox').hidden = t.value !== 'PGD';
   });
 
   document.addEventListener('input', function (e) {
@@ -598,6 +754,19 @@
   document.addEventListener('submit', function (e) {
     var f = e.target;
     if (f.id === 'leaveForm') { e.preventDefault(); submitForm(); }
+    if (f.id === 'staffForm') { e.preventDefault(); submitStaff(f); }
+    if (f.id === 'typesForm') {
+      e.preventDefault();
+      var types = collectRows('typeRows', function (r) {
+        return { ten: r.querySelector('[name=ten]').value, truPhep: r.querySelector('[name=tru]').checked, mau: r.querySelector('[name=mau]').value };
+      });
+      doAction(call('saveTypes', { types: types }), 'Đã lưu loại nghỉ');
+    }
+    if (f.id === 'holidaysForm') {
+      e.preventDefault();
+      var hols = collectRows('holRows', function (r) { return { ngay: r.querySelector('[name=ngay]').value, ten: r.querySelector('[name=ten]').value }; });
+      doAction(call('saveHolidays', { holidays: hols }), 'Đã lưu ngày lễ');
+    }
     if (f.id === 'pinForm') {
       e.preventDefault();
       var p1 = f.elements.p1.value, p2 = f.elements.p2.value;

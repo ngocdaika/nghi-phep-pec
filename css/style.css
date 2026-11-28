@@ -81,7 +81,7 @@ main { padding: 16px 20px 40px; max-width: 1600px; margin: 0 auto; }
 .btn.block { width: 100%; }
 .btn:disabled { opacity: .55; cursor: default; }
 .btn.icon { padding: 6px 10px; min-width: 38px; }
-select, input[type=text], input[type=date], input[type=password], input:not([type]), textarea {
+select, input[type=text], input[type=date], input[type=password], input[type=number], input:not([type]), textarea {
   border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #fff; min-height: 38px; width: 100%;
 }
 select:focus, input:focus, textarea:focus { outline: 2px solid var(--brand-soft); border-color: var(--brand); }
@@ -211,6 +211,32 @@ table.sum-tbl { border-collapse: separate; border-spacing: 0; width: 100%; font-
 .type-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .type-row:last-child { border-bottom: 0; }
 .type-row b { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* ---------- Quản trị ---------- */
+.adm-tbl td, .adm-tbl th { text-align: left; }
+.adm-tbl td.wrap { white-space: normal; min-width: 160px; }
+.adm-tbl tr.off td { color: #94A3B8; }
+.role { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 12px; font-weight: 600; background: #F1F5F9; color: #334155; }
+.role.Admin { background: #FEE2E2; color: #991B1B; }
+.role.GiamDoc { background: #E0F2FE; color: #075985; }
+.role.PGD { background: #DCFCE7; color: #166534; }
+.adm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.adm-grid .card + .card { margin-top: 0; }
+.ed-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow: auto; padding-right: 2px; }
+.ed-row { display: flex; gap: 8px; align-items: center; }
+.ed-row input[name=ten] { flex: 1; min-width: 0; width: auto; }
+.ed-row input[type=date] { flex: 0 0 150px; width: 150px; }
+.ed-row input[type=color] { width: 40px; height: 36px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.ed-row label.ck { display: flex; gap: 4px; align-items: center; font-weight: 400; white-space: nowrap; }
+.ed-row .del { color: var(--bad); }
+.ed-foot { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.ck-list { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; }
+.ck-list label { display: flex; gap: 6px; align-items: center; font-weight: 400; }
+.pin-box { font-size: 30px; font-weight: 800; letter-spacing: 6px; text-align: center; background: var(--brand-soft); color: var(--brand-dark); border-radius: 12px; padding: 14px; margin: 12px 0; font-variant-numeric: tabular-nums; }
+.assign-row { display: flex; gap: 8px; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.assign-row:last-child { border-bottom: 0; }
+.assign-row .who { text-align: right; }
+@media (max-width: 1000px) { .adm-grid { grid-template-columns: 1fr; } }
 
 /* ---------- Cá nhân ---------- */
 .me-head { display: flex; align-items: center; gap: 14px; }

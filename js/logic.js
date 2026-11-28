@@ -84,9 +84,49 @@
     return (Math.round(n * 2) / 2).toString().replace('.', ',');
   }
 
+  /* ---------- Phân quyền (giữ giống apps-script/Code.gs) ----------
+   * Admin: toàn quyền. GiamDoc: duyệt mọi đơn. PGD: duyệt đơn của nhân viên thuộc các phòng phụ trách.
+   * NhanVien: cá nhân. Đơn của NhanVien → PGĐ phụ trách phòng (không có thì Giám đốc);
+   * đơn của PGD → Giám đốc; đơn của Giám đốc và Admin tự được duyệt. */
+  var ROLES = { Admin: 'Quản trị', GiamDoc: 'Giám đốc', PGD: 'Phó Giám đốc', NhanVien: 'Cá nhân' };
+
+  function phuTrachList(s) {
+    return String((s && s.phuTrach) || '').split(';').map(function (x) { return x.trim(); }).filter(Boolean);
+  }
+  function covers(pgd, phong) { return pgd.vaiTro === 'PGD' && phuTrachList(pgd).indexOf(phong) >= 0; }
+  function needsApproval(p) { return p.vaiTro === 'NhanVien' || p.vaiTro === 'PGD'; }
+  function isApprover(me) {
+    return me.vaiTro === 'Admin' || me.vaiTro === 'GiamDoc' || (me.vaiTro === 'PGD' && phuTrachList(me).length > 0);
+  }
+  /** Người duyệt chính của p (để hiển thị và quyết định có tự duyệt hay không) */
+  function primaryApprovers(staff, p) {
+    if (!needsApproval(p)) return [];
+    var active = staff.filter(function (s) { return s.trangThai !== 'Nghỉ việc' && s.ma !== p.ma; });
+    if (p.vaiTro === 'NhanVien') {
+      var a = active.filter(function (s) { return covers(s, p.phong); });
+      if (a.length) return a;
+    }
+    var g = active.filter(function (s) { return s.vaiTro === 'GiamDoc'; });
+    if (g.length) return g;
+    return active.filter(function (s) { return s.vaiTro === 'Admin'; });
+  }
+  /** viewer có được duyệt / xóa đơn của requester không */
+  function canApprove(viewer, requester) {
+    if (!viewer || !requester || viewer.ma === requester.ma) return false;
+    if (viewer.vaiTro === 'Admin') return true;
+    if (!needsApproval(requester)) return false;
+    if (viewer.vaiTro === 'GiamDoc') return true;
+    return requester.vaiTro === 'NhanVien' && covers(viewer, requester.phong);
+  }
+  function canSeeReason(viewer, requester) {
+    return !!viewer && !!requester && (viewer.ma === requester.ma || viewer.vaiTro === 'GiamDoc' || canApprove(viewer, requester));
+  }
+
   global.Logic = {
     ST: ST, DOW: DOW, parseYMD: parseYMD, fmtYMD: fmtYMD, todayYMD: todayYMD, daysInMonth: daysInMonth, ymd: ymd,
     dow: dow, viDate: viDate, validateRange: validateRange, expandLeave: expandLeave, isActive: isActive,
-    buildIndex: buildIndex, yearTotals: yearTotals, fmtNum: fmtNum
+    buildIndex: buildIndex, yearTotals: yearTotals, fmtNum: fmtNum,
+    ROLES: ROLES, phuTrachList: phuTrachList, needsApproval: needsApproval, isApprover: isApprover,
+    primaryApprovers: primaryApprovers, canApprove: canApprove, canSeeReason: canSeeReason
   };
 })(typeof window !== 'undefined' ? window : this);

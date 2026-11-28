@@ -22,8 +22,15 @@ Nhân sự trong Trung tâm tự khai lịch nghỉ phép. Mọi người thấy
 8. Người khai được hủy đơn khi còn chờ duyệt. Người duyệt hoặc Admin được xóa đơn đã duyệt.
 9. Chưa gửi email báo cho người duyệt (danh sách chưa có email). Thay vào đó, tab Duyệt hiện số đơn đang chờ.
 
+## Cập nhật 28/11/2026 — phân cấp tài khoản (anh chốt)
+- 4 cấp: **Admin** (toàn quyền, tab Quản trị, phân quyền), **Giám đốc** (duyệt mọi đơn, nâng/hạ tài khoản giữa Cá nhân và PGĐ), **Phó Giám đốc** (duyệt theo phòng phụ trách), **Cá nhân**.
+- Anh chọn phương án A: đơn của nhân viên (kể cả Trưởng phòng) chỉ do **PGĐ phụ trách phòng** duyệt. Trưởng phòng là tài khoản cá nhân. Thay cho cột `NguoiDuyet` cũ.
+- Em tự quyết: đơn PGĐ → Giám đốc duyệt; đơn Giám đốc và Admin tự duyệt; phòng chưa giao PGĐ → Giám đốc duyệt; một PGĐ phụ trách được nhiều phòng; tài khoản `ADMIN` riêng, không thuộc phòng nên không hiện trên lịch; Giám đốc không tạo được Admin; luôn phải còn ít nhất 1 Admin.
+- PIN lưu dạng mã hóa SHA-256 có muối (muối nằm trong Script Properties). Admin chỉ đặt lại PIN, không xem được PIN.
+- Dữ liệu ban đầu nạp bằng `Seed.gs` (tạo bởi `tools/tao_du_lieu_ban_dau.py`), không còn file Excel trung gian.
+
 ## Cấu trúc dữ liệu (Google Sheet)
-- `NhanSu`: MaNV, HoTen, Phong, ChucDanh, VaiTro, NguoiDuyet, PhepNam, PhepTon, PIN, TrangThai
+- `NhanSu`: MaNV, HoTen, Phong, ChucDanh, VaiTro (Admin/GiamDoc/PGD/NhanVien), PhuTrach, PhepNam, PhepTon, PIN (mã hóa), TrangThai
 - `LoaiNghi`: Ten, TruPhep (Có/Không), Mau
 - `NgayLe`: Ngay, TenNgayLe
 - `DonNghi`: ID, MaNV, HoTen, LoaiNghi, TuNgay, TuBuoi, DenNgay, DenBuoi, SoNgay, LyDo, TrangThai, NguoiDuyet, NgayDuyet, GhiChuDuyet, NgayTao

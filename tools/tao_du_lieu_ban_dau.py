@@ -1,24 +1,22 @@
-"""Tạo file Excel dữ liệu ban đầu để nhập vào Google Sheets.
+"""Tạo dữ liệu ban đầu cho Google Sheet từ danh sách nhân sự Excel.
 
-Đọc danh sách nhân sự (STT | Họ và tên | Chức danh, có dòng tiêu đề phòng dạng I, II, ...),
-gán Mã NV, PIN ngẫu nhiên, người duyệt mặc định. File kết quả chứa PIN — KHÔNG đưa lên GitHub.
+Đọc danh sách (STT | Họ và tên | Chức danh, có dòng tiêu đề phòng dạng I, II, ...), gán Mã NV và PIN ngẫu nhiên.
+Kết quả nằm trong thư mục private/ (đã chặn trong .gitignore, KHÔNG đưa lên GitHub):
+  - Seed.gs                      dán vào Apps Script (cùng Code.gs), chạy setup() để nạp dữ liệu, rồi xóa file này
+  - Danh sach PIN nhan su.xlsx   danh sách Mã NV + PIN để phát riêng cho từng người
 
-Chạy:  python tools/tao_du_lieu_ban_dau.py "PEC_Danh sach nhan su.xlsx" "Du lieu Google Sheet - Nghi phep PEC.xlsx"
+Vai trò mặc định: Giám đốc Trung tâm = GiamDoc; Phó Giám đốc = PGD (chưa giao phòng — giao trong tab Quản trị);
+còn lại = NhanVien. Thêm tài khoản ADMIN (quản trị, không thuộc phòng nào nên không hiện trên lịch).
+
+Chạy:  python tools/tao_du_lieu_ban_dau.py "PEC_Danh sach nhan su.xlsx"
 """
+import json
+import os
 import secrets
 import sys
 
 import openpyxl
 from openpyxl.styles import Font, PatternFill
-from openpyxl.worksheet.datavalidation import DataValidation
-
-HEADERS = {
-    'NhanSu': ['MaNV', 'HoTen', 'Phong', 'ChucDanh', 'VaiTro', 'NguoiDuyet', 'PhepNam', 'PhepTon', 'PIN', 'TrangThai'],
-    'LoaiNghi': ['Ten', 'TruPhep', 'Mau'],
-    'NgayLe': ['Ngay', 'TenNgayLe'],
-    'DonNghi': ['ID', 'MaNV', 'HoTen', 'LoaiNghi', 'TuNgay', 'TuBuoi', 'DenNgay', 'DenBuoi', 'SoNgay', 'LyDo',
-                'TrangThai', 'NguoiDuyet', 'NgayDuyet', 'GhiChuDuyet', 'NgayTao'],
-}
 
 LOAI_NGHI = [
     ('Phép năm', 'Có', '#0093DD'),
@@ -73,71 +71,67 @@ def doc_nhan_su(path):
     return people
 
 
-def gan_nguoi_duyet(people):
+def gan_vai_tro(people):
     for i, p in enumerate(people, 1):
         p['ma'] = 'NS%02d' % i
-    gd = next((p for p in people if p['chuc'].lower() == 'giám đốc trung tâm'), None)
-    truong = {}
-    for p in people:
         c = p['chuc'].lower()
-        if c in ('trưởng phòng', 'trưởng bộ phận') and p['phong'] not in truong:
-            truong[p['phong']] = p
-    for p in people:
-        c = p['chuc'].lower()
-        if p is gd:
-            p['vaitro'], p['duyet'] = 'Admin', ''
-        elif p['phong'] == 'Ban Giám đốc' or p is truong.get(p['phong']):
-            p['vaitro'], p['duyet'] = 'Duyet', gd['ma'] if gd else ''
+        if c == 'giám đốc trung tâm':
+            p['vaitro'] = 'GiamDoc'
+        elif c.startswith('phó giám đốc'):
+            p['vaitro'] = 'PGD'
         else:
-            head = truong.get(p['phong'])
-            p['vaitro'], p['duyet'] = 'NhanVien', head['ma'] if head else (gd['ma'] if gd else '')
+            p['vaitro'] = 'NhanVien'
     return people
 
 
-def main(src, dst):
-    people = gan_nguoi_duyet(doc_nhan_su(src))
-    pins = set()
-    wb = openpyxl.Workbook()
-    wb.remove(wb.active)
-    bold, fill = Font(bold=True, color='FFFFFF'), PatternFill('solid', fgColor='0093DD')
-    for name, head in HEADERS.items():
-        ws = wb.create_sheet(name)
-        ws.append(head)
-        for c in ws[1]:
-            c.font, c.fill = bold, fill
-        ws.freeze_panes = 'A2'
-    ns = wb['NhanSu']
-    for p in people:
+def pin_moi(used):
+    while True:
         pin = str(100000 + secrets.randbelow(900000))
-        while pin in pins:
-            pin = str(100000 + secrets.randbelow(900000))
-        pins.add(pin)
-        ns.append([p['ma'], p['ten'], p['phong'], p['chuc'], p['vaitro'], p['duyet'], 12, 0, pin, 'Đang làm'])
-    for row in ns.iter_rows(min_row=2, min_col=9, max_col=9):
+        if pin not in used:
+            used.add(pin)
+            return pin
+
+
+def main(src, out_dir='private'):
+    people = gan_vai_tro(doc_nhan_su(src))
+    people.insert(0, {'ma': 'ADMIN', 'ten': 'Quản trị hệ thống', 'phong': '', 'chuc': 'Quản trị', 'vaitro': 'Admin'})
+    used = set()
+    for p in people:
+        p['pin'] = pin_moi(used)
+
+    seed = {
+        'NhanSu': [{'MaNV': p['ma'], 'HoTen': p['ten'], 'Phong': p['phong'], 'ChucDanh': p['chuc'],
+                    'VaiTro': p['vaitro'], 'PhuTrach': '', 'PhepNam': '12', 'PhepTon': '0',
+                    'PIN': p['pin'], 'TrangThai': 'Đang làm'} for p in people],
+        'LoaiNghi': [{'Ten': t, 'TruPhep': tru, 'Mau': mau} for t, tru, mau in LOAI_NGHI],
+        'NgayLe': [{'Ngay': d, 'TenNgayLe': ten} for d, ten in NGAY_LE],
+    }
+    os.makedirs(out_dir, exist_ok=True)
+    seed_path = os.path.join(out_dir, 'Seed.gs')
+    with open(seed_path, 'w', encoding='utf-8') as f:
+        f.write('// Dữ liệu ban đầu — CHỨA PIN. Chạy setup() xong thì XÓA file này khỏi Apps Script.\n')
+        f.write('var SEED = ' + json.dumps(seed, ensure_ascii=False, indent=1) + ';\n')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'PIN'
+    ws.append(['Mã NV', 'Họ tên', 'Phòng', 'Chức danh', 'Vai trò', 'PIN'])
+    bold, fill = Font(bold=True, color='FFFFFF'), PatternFill('solid', fgColor='0093DD')
+    for c in ws[1]:
+        c.font, c.fill = bold, fill
+    names = {'Admin': 'Quản trị', 'GiamDoc': 'Giám đốc', 'PGD': 'Phó Giám đốc', 'NhanVien': 'Cá nhân'}
+    for p in people:
+        ws.append([p['ma'], p['ten'], p['phong'], p['chuc'], names[p['vaitro']], p['pin']])
+    for row in ws.iter_rows(min_row=2, min_col=6, max_col=6):
         for c in row:
             c.number_format = '@'
-    dv = DataValidation(type='list', formula1='"Admin,Duyet,NhanVien"', allow_blank=False)
-    ns.add_data_validation(dv)
-    dv.add('E2:E200')
-    dv2 = DataValidation(type='list', formula1='"Đang làm,Nghỉ việc"')
-    ns.add_data_validation(dv2)
-    dv2.add('J2:J200')
-    for t in LOAI_NGHI:
-        wb['LoaiNghi'].append(list(t))
-    for d in NGAY_LE:
-        wb['NgayLe'].append(list(d))
-    for ws_name, col in (('NgayLe', 'A'), ('DonNghi', 'E'), ('DonNghi', 'G')):
-        for c in wb[ws_name][col]:
-            c.number_format = '@'
-    widths = {'NhanSu': [8, 28, 30, 24, 11, 12, 9, 9, 10, 11], 'LoaiNghi': [34, 9, 10], 'NgayLe': [12, 34],
-              'DonNghi': [18, 8, 26, 22, 12, 8, 12, 8, 8, 40, 11, 22, 17, 30, 17]}
-    for ws_name, ws_widths in widths.items():
-        for i, w in enumerate(ws_widths):
-            wb[ws_name].column_dimensions[openpyxl.utils.get_column_letter(i + 1)].width = w
-    wb.save(dst)
-    print('Đã tạo', dst, '-', len(people), 'nhân sự')
+    for i, w in enumerate([9, 28, 36, 24, 14, 10]):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i + 1)].width = w
+    pin_path = os.path.join(out_dir, 'Danh sach PIN nhan su.xlsx')
+    wb.save(pin_path)
+    print('Đã tạo', seed_path, 'và', pin_path, '-', len(people), 'tài khoản')
 
 
 if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else 'private')
