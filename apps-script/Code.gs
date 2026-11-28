@@ -32,7 +32,11 @@ var DEFAULT_TYPES = [
   { Ten: 'Nghỉ không lương', TinhNghi: 'Có', Mau: '#F97316' }
 ];
 var AUTO = '(tự động)';
-var MAX_FAILS = 5;
+var MAX_FAILS = 5;          // sai 5 lần → khóa tài khoản đó 15 phút
+var LOCK_SECONDS = 900;
+var GLOBAL_FAILS_10M = 30;  // cả hệ thống sai quá 30 lần / 10 phút → tạm dừng đăng nhập 10 phút
+var GLOBAL_FAILS_6H = 200;  // cả hệ thống sai quá 200 lần / 6 giờ → tạm dừng 1 giờ
+var MAX_PENDING = 30;       // số đơn chờ duyệt tối đa của một người
 
 /* ---------- Cài đặt ---------- */
 
@@ -203,7 +207,8 @@ function types_() {
     var ten = String(r.Ten);
     // TinhNghi = Không → không cộng vào tổng ngày nghỉ (VD: Công tác). File cũ chưa có cột này thì đoán theo tên.
     var tinh = r.TinhNghi !== undefined ? !/^kh/i.test(String(r.TinhNghi)) : !/công tác/i.test(ten);
-    return { ten: ten, tinhNghi: tinh, mau: String(r.Mau || '') };
+    var mau = String(r.Mau || '');
+    return { ten: ten, tinhNghi: tinh, mau: /^#[0-9a-f]{6}$/i.test(mau) ? mau : '#64748B' };
   });
 }
 
@@ -238,32 +243,77 @@ function hashPin_(ma, pin) {
   return 'h1$' + Utilities.base64Encode(bytes);
 }
 
+/** PIN 6 số ngẫu nhiên an toàn (UUID dùng bộ sinh số ngẫu nhiên mật mã) */
 function newPin_() {
-  return String(100000 + Math.floor(Math.random() * 900000));
+  var hex = Utilities.getUuid().replace(/-/g, '').slice(0, 12);
+  return String(100000 + parseInt(hex, 16) % 900000);
 }
 
 /* ---------- Đăng nhập & phân quyền (giữ giống js/logic.js) ---------- */
 
 function auth_(b) {
-  var ma = String(b.ma || '').trim().toUpperCase();
-  var pin = String(b.pin || '').trim();
+  var ma = String(b.ma || '').trim().toUpperCase().slice(0, 30);
+  var pin = String(b.pin || '').trim().slice(0, 20);
   if (!ma || !pin) throw new Error('Thiếu Mã NV hoặc PIN');
-  var cache = CacheService.getScriptCache();
-  var key = 'fail_' + ma;
-  var fails = Number(cache.get(key) || 0);
-  if (fails >= MAX_FAILS) throw new Error('Nhập sai PIN quá ' + MAX_FAILS + ' lần. Vui lòng thử lại sau 10 phút.');
+  // Giữ chỗ một lần thử TRƯỚC khi kiểm tra PIN (trong khóa) → gửi song song cũng không vượt quá MAX_FAILS
+  reserveAttempt_(ma);
   var staff = staff_();
   var me = null;
   for (var i = 0; i < staff.length; i++) if (staff[i].ma === ma) me = staff[i];
   var hashed = me && me.pin.indexOf('h1$') === 0;
-  var ok = me && me.trangThai !== 'Nghỉ việc' && (hashed ? me.pin === hashPin_(ma, pin) : me.pin === pin);
+  var ok = !!me && me.trangThai !== 'Nghỉ việc' && (hashed ? me.pin === hashPin_(ma, pin) : me.pin !== '' && me.pin === pin);
   if (!ok) {
-    cache.put(key, String(fails + 1), 600);
+    recordFail_(ma);
     throw new Error('Mã NV hoặc PIN không đúng');
   }
-  cache.remove(key);
+  releaseAttempt_(ma);
   if (!hashed) withLock_(function () { writeStaff_(me._row, { PIN: hashPin_(ma, pin) }); });
   return { me: me, staff: staff };
+}
+
+/* Bộ đếm sai PIN. Mọi thao tác đọc-ghi bộ đếm nằm trong khóa để không bị vượt qua bằng yêu cầu song song. */
+function reserveAttempt_(ma) {
+  withLock_(function () {
+    var c = CacheService.getScriptCache();
+    var v = c.getAll(['glock', 'try_' + ma]);
+    if (v.glock) throw new Error('Hệ thống tạm dừng đăng nhập do có nhiều lần nhập sai PIN. Vui lòng thử lại sau.');
+    var n = Number(v['try_' + ma] || 0);
+    if (n >= MAX_FAILS) throw new Error('Nhập sai PIN quá ' + MAX_FAILS + ' lần. Vui lòng thử lại sau 15 phút.');
+    c.put('try_' + ma, String(n + 1), LOCK_SECONDS);
+  });
+}
+function releaseAttempt_(ma) {
+  withLock_(function () {
+    var c = CacheService.getScriptCache();
+    var n = Number(c.get('try_' + ma) || 0);
+    if (n > 1) c.put('try_' + ma, String(n - 1), LOCK_SECONDS); else c.remove('try_' + ma);
+  });
+}
+function recordFail_(ma) {
+  withLock_(function () {
+    var c = CacheService.getScriptCache();
+    var v = c.getAll(['g10', 'g6h', 'try_' + ma]);
+    var g10 = Number(v.g10 || 0) + 1, g6h = Number(v.g6h || 0) + 1;
+    c.put('g10', String(g10), 600);
+    c.put('g6h', String(g6h), 21600);
+    if (Number(v['try_' + ma] || 0) >= MAX_FAILS) log_('Khóa tài khoản 15 phút', ma);
+    if (g6h >= GLOBAL_FAILS_6H) { c.put('glock', '1', 3600); log_('Tạm dừng đăng nhập 1 giờ (sai PIN ' + g6h + ' lần / 6 giờ)', ma); }
+    else if (g10 >= GLOBAL_FAILS_10M) { c.put('glock', '1', 600); log_('Tạm dừng đăng nhập 10 phút (sai PIN ' + g10 + ' lần / 10 phút)', ma); }
+  });
+}
+/** Ghi sự kiện bảo mật vào tab NhatKy (tự tạo) */
+function log_(event, ma) {
+  try {
+    var ss = SpreadsheetApp.getActive();
+    var sh = ss.getSheetByName('NhatKy');
+    if (!sh) { sh = ss.insertSheet('NhatKy'); sh.appendRow(['ThoiGian', 'SuKien', 'MaNV']); sh.setFrozenRows(1); }
+    sh.appendRow([Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss'), event, safe_(ma)]);
+  } catch (e) { /* không chặn đăng nhập vì lỗi ghi nhật ký */ }
+}
+
+/** Chống chèn công thức: chuỗi bắt đầu bằng = + - @ được ghi thành chữ thường (thêm dấu ' ở đầu) */
+function safe_(v) {
+  return typeof v === 'string' && /^[=+\-@\t\r]/.test(v) ? "'" + v : v;
 }
 
 function phuTrachList_(s) {
@@ -347,11 +397,17 @@ function createLeave_(ctx, req) {
   if (!person) throw new Error('Không tìm thấy nhân sự ' + ma);
 
   var loai = String(req.loai || '').trim();
-  if (!loai) throw new Error('Chưa nhập loại nghỉ');
+  if (!loai) throw new Error('Chưa chọn loại');
+  if (!types_().some(function (t) { return t.ten === loai; })) throw new Error('Loại "' + loai.slice(0, 40) + '" không có trong danh sách');
   var r = { tuNgay: String(req.tuNgay || ''), tuBuoi: req.tuBuoi === 'Chiều' ? 'Chiều' : 'Sáng',
             denNgay: String(req.denNgay || ''), denBuoi: req.denBuoi === 'Sáng' ? 'Sáng' : 'Chiều' };
   var err = validateRange(r);
   if (err) throw new Error(err);
+  var yNow = Number(Utilities.formatDate(new Date(), TZ, 'yyyy'));
+  var y1 = Number(r.tuNgay.slice(0, 4)), y2 = Number(r.denNgay.slice(0, 4));
+  if (y1 < yNow - 1 || y2 > yNow + 1) throw new Error('Chỉ khai được đơn trong năm trước, năm nay và năm sau');
+  var pendingCount = requests_().filter(function (x) { return x.ma === ma && x.trangThai === ST.PENDING; }).length;
+  if (pendingCount >= MAX_PENDING) throw new Error('Đã có ' + MAX_PENDING + ' đơn chờ duyệt, hãy đợi duyệt bớt');
 
   var hset = {};
   holidays_().forEach(function (h) { hset[h.ngay] = true; });
@@ -377,12 +433,12 @@ function createLeave_(ctx, req) {
   var id = 'D' + Utilities.formatDate(new Date(), TZ, 'yyMMddHHmmss') + Math.floor(Math.random() * 900 + 100);
   var row = {
     ID: id, MaNV: ma, HoTen: person.ten, LoaiNghi: loai, TuNgay: r.tuNgay, TuBuoi: r.tuBuoi,
-    DenNgay: r.denNgay, DenBuoi: r.denBuoi, SoNgay: total, LyDo: String(req.lyDo || '').slice(0, 500),
+    DenNgay: r.denNgay, DenBuoi: r.denBuoi, SoNgay: total, LyDo: String(req.lyDo || '').trim().slice(0, 500),
     TrangThai: autoApprove ? ST.APPROVED : ST.PENDING, NguoiDuyet: autoApprove ? AUTO : '',
     NgayDuyet: autoApprove ? now : '', GhiChuDuyet: '', NgayTao: now
   };
   var t = table_('DonNghi');
-  t.sheet.appendRow(t.head.map(function (h) { return row[h] !== undefined ? row[h] : ''; }));
+  t.sheet.appendRow(t.head.map(function (h) { return row[h] !== undefined ? safe_(row[h]) : ''; }));
   return { id: id, soNgay: total, trangThai: row.TrangThai };
 }
 
@@ -399,7 +455,7 @@ function setCells_(sheetName, rowNum, values) {
     if (col < 0) return;
     var cell = t.sheet.getRange(rowNum, col + 1);
     if (h === 'PIN') cell.setNumberFormat('@');
-    cell.setValue(values[h]);
+    cell.setValue(safe_(values[h]));
   });
 }
 function writeStaff_(rowNum, values) { setCells_('NhanSu', rowNum, values); }
@@ -430,7 +486,9 @@ function cancel_(ctx, id) {
 
 function changePin_(ctx, newPin) {
   newPin = String(newPin || '').trim();
-  if (!/^\d{4,8}$/.test(newPin)) throw new Error('PIN mới phải gồm 4–8 chữ số');
+  if (!/^\d{6,8}$/.test(newPin)) throw new Error('PIN mới phải gồm 6–8 chữ số');
+  if (/^(\d)\1+$/.test(newPin) || '0123456789'.indexOf(newPin) >= 0 || '9876543210'.indexOf(newPin) >= 0)
+    throw new Error('PIN quá dễ đoán (toàn số giống nhau hoặc dãy liên tiếp)');
   writeStaff_(ctx.me._row, { PIN: hashPin_(ctx.me.ma, newPin) });
   return { changed: true };
 }
@@ -477,7 +535,7 @@ function saveStaff_(ctx, d, isNew) {
     values.MaNV = ma;
     values.PIN = hashPin_(ma, pin);
     var t = table_('NhanSu');
-    t.sheet.appendRow(t.head.map(function (h) { return values[h] !== undefined ? values[h] : ''; }));
+    t.sheet.appendRow(t.head.map(function (h) { return values[h] !== undefined ? safe_(values[h]) : ''; }));
     return { saved: ma, pin: pin };
   }
   if (!target) throw new Error('Không tìm thấy nhân sự ' + ma);
@@ -491,7 +549,8 @@ function resetPin_(ctx, targetMa) {
   if (!target) throw new Error('Không tìm thấy nhân sự');
   var pin = newPin_();
   writeStaff_(target._row, { PIN: hashPin_(target.ma, pin) });
-  CacheService.getScriptCache().remove('fail_' + target.ma);
+  CacheService.getScriptCache().remove('try_' + target.ma);
+  log_('Quản trị đặt lại PIN (bởi ' + ctx.me.ma + ')', target.ma);
   return { ma: target.ma, pin: pin };
 }
 
@@ -502,7 +561,7 @@ function rewrite_(sheetName, rows) {
   if (rows.length) {
     var range = t.sheet.getRange(2, 1, rows.length, t.head.length);
     range.setNumberFormat('@');
-    range.setValues(rows.map(function (o) { return t.head.map(function (h) { return o[h] !== undefined ? o[h] : ''; }); }));
+    range.setValues(rows.map(function (o) { return t.head.map(function (h) { return o[h] !== undefined ? safe_(o[h]) : ''; }); }));
   }
 }
 

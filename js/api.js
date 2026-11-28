@@ -218,7 +218,7 @@
         if (ma !== me.ma && me.vaiTro !== 'Admin') throw new Error('Bạn chỉ được khai nghỉ cho chính mình');
         var person = byMa(ma);
         if (!person) throw new Error('Không tìm thấy nhân sự ' + ma);
-        if (!q.loai) throw new Error('Chưa nhập loại nghỉ');
+        if (!db.types.some(function (t) { return t.ten === q.loai; })) throw new Error('Loại không có trong danh sách');
         var err = L.validateRange(q);
         if (err) throw new Error(err);
         var days = L.expandLeave(q, hset);
@@ -258,7 +258,7 @@
         return { ok: true };
       }
       case 'changePin':
-        if (!/^\d{4,8}$/.test(String(b.newPin))) throw new Error('PIN mới phải gồm 4–8 chữ số');
+        if (!/^\d{6,8}$/.test(String(b.newPin))) throw new Error('PIN mới phải gồm 6–8 chữ số');
         me.pin = String(b.newPin); demoSave(db);
         return { ok: true };
       case 'saveStaff': {

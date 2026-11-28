@@ -41,7 +41,10 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.className = ''; }, bad ? 5000 : 2800);
   }
-  function colorOf(loai) { return S.typeMap[loai] ? (S.typeMap[loai].mau || OTHER_COLOR) : OTHER_COLOR; }
+  function colorOf(loai) {
+    var c = S.typeMap[loai] && S.typeMap[loai].mau;
+    return /^#[0-9a-f]{6}$/i.test(c || '') ? c : OTHER_COLOR;
+  }
   function statusChip(st) {
     var c = st === ST.PENDING ? 'pending' : st === ST.APPROVED ? 'approved' : 'rejected';
     return '<span class="chip ' + c + '">' + esc(st) + '</span>';
@@ -594,6 +597,7 @@
     var csv = '﻿' + rows.map(function (r) {
       return r.map(function (c) {
         c = c == null ? '' : String(c);
+        if (/^[=+\-@\t\r]/.test(c)) c = "'" + c; // chống chèn công thức khi mở bằng Excel
         return /[",;\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c;
       }).join(',');
     }).join('\r\n');
@@ -660,7 +664,7 @@
       '<div><b>' + L.fmtNum(yt.pending) + '</b><span>Ngày chờ duyệt</span></div></div></div>' +
       '<div class="card"><h2>Đơn nghỉ của tôi</h2>' + (mine.length ? mine.map(function (r) { return reqBlock(r, { noName: true }); }).join('') : '<div class="empty">Bạn chưa có đơn nghỉ nào.</div>') + '</div>' +
       '<div class="card"><h2>Đổi mã PIN</h2><form id="pinForm" class="form-grid">' +
-      '<label>PIN mới (4–8 chữ số)<input type="password" inputmode="numeric" name="p1" autocomplete="new-password" required></label>' +
+      '<label>PIN mới (6–8 chữ số)<input type="password" inputmode="numeric" name="p1" autocomplete="new-password" required></label>' +
       '<label>Nhập lại PIN mới<input type="password" inputmode="numeric" name="p2" autocomplete="new-password" required></label>' +
       '<div class="full"><button class="btn primary" type="submit">Đổi PIN</button></div></form></div>' +
       '<div class="card" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="refresh">↻ Tải lại dữ liệu</button><button class="btn bad" data-act="logout">Đăng xuất</button>' +

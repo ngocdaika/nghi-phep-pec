@@ -31,6 +31,11 @@ Lý do nghỉ chỉ hiện cho chính người nghỉ, người có quyền duy�
 - Mọi dữ liệu nằm trong file Google Sheet (4 tab: `NhanSu`, `LoaiNghi`, `NgayLe`, `DonNghi`). Chỉ chủ file và người được chia sẻ mở được. Google tự lưu lịch sử phiên bản.
 - Đăng nhập bằng **Mã NV + PIN**. PIN lưu **dạng mã hóa** (`h1$…`), ai mở Sheet cũng không đọc được. Quên PIN thì Quản trị **đặt lại PIN** trong tab Quản trị; PIN mới chỉ hiện một lần.
 - Muốn đặt PIN thủ công: ghi số vào cột `PIN` trong Sheet. Lần đăng nhập đầu tiên hệ thống tự mã hóa.
+- Chống dò PIN: sai 5 lần → khóa tài khoản đó 15 phút (tính cả khi gửi nhiều yêu cầu cùng lúc). Cả hệ thống sai quá 30 lần/10 phút hoặc 200 lần/6 giờ → tạm dừng đăng nhập 10 phút / 1 giờ. Các lần khóa ghi vào tab `NhatKy`.
+- PIN tự đổi phải 6–8 số, không được toàn số giống nhau hoặc dãy liên tiếp.
+- Mọi chữ ghi vào Sheet bắt đầu bằng `= + - @` được lưu dạng chữ (chống chèn công thức). File CSV xuất ra cũng vậy.
+- Trang có Content-Security-Policy: chỉ chạy script của chính trang, chỉ gọi tới Google Apps Script.
+- Máy dùng chung: bấm **Đăng xuất** ở tab Cá nhân sau khi dùng (trình duyệt nhớ Mã NV + PIN).
 
 ## 1. Tạo dữ liệu ban đầu (trên máy)
 
