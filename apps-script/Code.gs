@@ -49,6 +49,9 @@ function setup() {
     .requireValueInList(['Đang làm', 'Nghỉ việc'], true).setAllowInvalid(false).build());
   // Nạp dữ liệu ban đầu từ Seed.gs (nếu có) vào các tab còn trống
   if (typeof SEED !== 'undefined') {
+    // Seed.gs chứa PIN đã mã hóa sẵn bằng muối của nó → dùng muối này khi bảng nhân sự còn trống
+    if (SEED.PIN_SALT && !table_('NhanSu').rows.length)
+      PropertiesService.getScriptProperties().setProperty('PIN_SALT', SEED.PIN_SALT);
     ['NhanSu', 'LoaiNghi', 'NgayLe'].forEach(function (name) {
       if (!table_(name).rows.length && SEED[name] && SEED[name].length) rewrite_(name, SEED[name]);
     });

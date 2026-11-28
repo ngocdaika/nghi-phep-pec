@@ -38,7 +38,7 @@ python tools/tao_du_lieu_ban_dau.py "PEC_Danh sach nhan su.xlsx"
 ```
 
 Lệnh này tạo trong thư mục `private/` (không lên GitHub):
-- `Seed.gs` – dữ liệu nhân sự, loại nghỉ, ngày lễ, kèm PIN ban đầu.
+- `Seed.gs` – dữ liệu nhân sự, loại nghỉ, ngày lễ; PIN đã mã hóa sẵn (không chứa PIN gốc).
 - `Danh sach PIN nhan su.xlsx` – Mã NV + PIN để phát cho từng người. Có thêm tài khoản `ADMIN` cho người quản trị.
 
 ## 2. Tạo Google Sheet và Apps Script
@@ -48,7 +48,7 @@ Lệnh này tạo trong thư mục `private/` (không lên GitHub):
 3. Dán toàn bộ `apps-script/Code.gs` vào file `Code.gs`.
 4. Bấm **+ → Tập lệnh**, đặt tên `Seed`, dán nội dung `private/Seed.gs`. Lưu.
 5. Chọn hàm `setup` → **Chạy** → cấp quyền cho tài khoản Google của mình. Hàm này tạo các tab, nạp dữ liệu, đặt múi giờ GMT+7 và mã hóa PIN.
-6. **Xóa file `Seed`** khỏi dự án Apps Script (nó chứa PIN gốc).
+6. **Xóa file `Seed`** khỏi dự án Apps Script (không cần nữa).
 7. **Triển khai → Tùy chọn triển khai mới → Ứng dụng web**: *Thực thi với tư cách* **Tôi**, *Người có quyền truy cập* **Bất kỳ ai** → sao chép URL `https://script.google.com/macros/s/…/exec`.
 
 Khi sửa `Code.gs` về sau: **Triển khai → Quản lý triển khai → Chỉnh sửa → Phiên bản mới** (URL giữ nguyên).

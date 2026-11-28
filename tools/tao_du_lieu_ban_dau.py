@@ -2,7 +2,7 @@
 
 Đọc danh sách (STT | Họ và tên | Chức danh, có dòng tiêu đề phòng dạng I, II, ...), gán Mã NV và PIN ngẫu nhiên.
 Kết quả nằm trong thư mục private/ (đã chặn trong .gitignore, KHÔNG đưa lên GitHub):
-  - Seed.gs                      dán vào Apps Script (cùng Code.gs), chạy setup() để nạp dữ liệu, rồi xóa file này
+  - Seed.gs                      (PIN đã mã hóa) dán vào Apps Script (cùng Code.gs), chạy setup() để nạp dữ liệu, rồi xóa file này
   - Danh sach PIN nhan su.xlsx   danh sách Mã NV + PIN để phát riêng cho từng người
 
 Vai trò mặc định: Giám đốc Trung tâm = GiamDoc; Phó Giám đốc = PGD (chưa giao phòng — giao trong tab Quản trị);
@@ -10,6 +10,8 @@ còn lại = NhanVien. Thêm tài khoản ADMIN (quản trị, không thuộc ph
 
 Chạy:  python tools/tao_du_lieu_ban_dau.py "PEC_Danh sach nhan su.xlsx"
 """
+import base64
+import hashlib
 import json
 import os
 import secrets
@@ -84,6 +86,11 @@ def gan_vai_tro(people):
     return people
 
 
+def hash_pin(salt, ma, pin):
+    """Giống hashPin_() trong Code.gs: 'h1$' + base64(SHA-256(salt|MA|pin))"""
+    return 'h1$' + base64.b64encode(hashlib.sha256(('%s|%s|%s' % (salt, ma, pin)).encode('utf-8')).digest()).decode()
+
+
 def pin_moi(used):
     while True:
         pin = str(100000 + secrets.randbelow(900000))
@@ -96,21 +103,23 @@ def main(src, out_dir='private'):
     people = gan_vai_tro(doc_nhan_su(src))
     people.insert(0, {'ma': 'ADMIN', 'ten': 'Quản trị hệ thống', 'phong': '', 'chuc': 'Quản trị', 'vaitro': 'Admin'})
     used = set()
+    salt = secrets.token_hex(32)
     for p in people:
         p['pin'] = pin_moi(used)
 
     seed = {
+        'PIN_SALT': salt,
         'NhanSu': [{'MaNV': p['ma'], 'HoTen': p['ten'], 'Phong': p['phong'], 'ChucDanh': p['chuc'],
                     'VaiTro': p['vaitro'], 'PhuTrach': '', 'PhepNam': '12', 'PhepTon': '0',
-                    'PIN': p['pin'], 'TrangThai': 'Đang làm'} for p in people],
+                    'PIN': hash_pin(salt, p['ma'], p['pin']), 'TrangThai': 'Đang làm'} for p in people],
         'LoaiNghi': [{'Ten': t, 'TruPhep': tru, 'Mau': mau} for t, tru, mau in LOAI_NGHI],
         'NgayLe': [{'Ngay': d, 'TenNgayLe': ten} for d, ten in NGAY_LE],
     }
     os.makedirs(out_dir, exist_ok=True)
     seed_path = os.path.join(out_dir, 'Seed.gs')
     with open(seed_path, 'w', encoding='utf-8') as f:
-        f.write('// Dữ liệu ban đầu — CHỨA PIN. Chạy setup() xong thì XÓA file này khỏi Apps Script.\n')
-        f.write('var SEED = ' + json.dumps(seed, ensure_ascii=False, indent=1) + ';\n')
+        f.write('// Dữ liệu ban đầu (PIN đã mã hóa). Chạy setup() xong thì XÓA file này khỏi Apps Script.\n')
+        f.write('var SEED = ' + json.dumps(seed, ensure_ascii=False, separators=(',', ':')) + ';\n')
 
     wb = openpyxl.Workbook()
     ws = wb.active
