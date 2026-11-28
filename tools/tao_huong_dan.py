@@ -87,11 +87,11 @@ section('gioi-thieu', 'Giới thiệu', '''
 <tbody>
 <tr><td><b>Nhân viên</b></td><td>Hôm nay ai vắng mặt; lịch và tổng kết của chính mình</td><td>Khai đơn, hủy đơn đang chờ duyệt</td></tr>
 <tr><td><b>Trưởng / Phó phòng</b></td><td>Lịch và tổng kết của cả Trung tâm</td><td>Như nhân viên</td></tr>
-<tr><td><b>Phó Giám đốc</b></td><td>Như trên</td><td>Duyệt đơn của các phòng được giao phụ trách</td></tr>
-<tr><td><b>Giám đốc</b></td><td>Như trên, kèm lý do nghỉ</td><td>Duyệt mọi đơn; đổi vai trò, giao phòng cho PGĐ</td></tr>
+<tr><td><b>Phó Giám đốc</b></td><td>Như trên, kèm lý do nghỉ của mọi người</td><td>Duyệt đơn của các phòng được giao phụ trách</td></tr>
+<tr><td><b>Giám đốc</b></td><td>Như trên, kèm lý do nghỉ của mọi người</td><td>Duyệt mọi đơn; đổi vai trò, giao phòng cho PGĐ</td></tr>
 <tr><td><b>Quản trị</b></td><td>Tất cả</td><td>Toàn quyền: nhân sự, mật khẩu, loại nghỉ, ngày lễ</td></tr>
 </tbody></table>
-<p class="muted">Đơn của Nhân viên và Trưởng/Phó phòng do PGĐ phụ trách phòng duyệt (phòng chưa giao PGĐ thì Giám đốc duyệt). Đơn của PGĐ do Giám đốc duyệt. Lý do nghỉ chỉ người nghỉ, người duyệt và Giám đốc xem được.</p>
+<p class="muted">Đơn của Nhân viên và Trưởng/Phó phòng do PGĐ phụ trách phòng duyệt (phòng chưa giao PGĐ thì Giám đốc duyệt). Đơn của PGĐ do Giám đốc duyệt. Lý do nghỉ chỉ người nghỉ và lãnh đạo từ Phó Giám đốc trở lên (Phó Giám đốc, Giám đốc, Quản trị) xem được.</p>
 ''', '')
 
 section('dang-nhap', '1. Đăng nhập', '''
@@ -134,11 +134,11 @@ section('khai-nghi', '4. Khai nghỉ', '''
 ''', two(
     shot('web-form', 'Khai nghỉ trên máy tính') + steps([
         'Chọn <b>loại</b>: Nghỉ phép, Công tác hoặc Nghỉ không lương.', '<b>Chọn nhanh</b>: cả ngày hôm nay, sáng nay, chiều nay, ngày mai.',
-        'Hoặc chọn <b>Từ ngày – Đến ngày</b> và buổi.', 'Ghi <b>lý do</b> (chỉ bạn, người duyệt và quản trị xem được).',
+        'Hoặc chọn <b>Từ ngày – Đến ngày</b> và buổi.', 'Ghi <b>lý do</b> (chỉ bạn và lãnh đạo từ Phó Giám đốc trở lên xem được).',
         'Kiểm tra <b>số ngày nghỉ</b> và người sẽ duyệt.', 'Bấm <b>Gửi đơn nghỉ</b>.']),
     shot('mob-form', 'Khai nghỉ trên điện thoại') + steps([
         'Chọn <b>loại</b>.', '<b>Chọn nhanh</b> ngày phổ biến.', 'Hoặc chọn <b>Từ ngày – Đến ngày</b> và buổi.',
-        'Ghi <b>lý do</b>.', 'Kiểm tra <b>số ngày</b> và người duyệt.', 'Chạm <b>Gửi đơn nghỉ</b>.'])))
+        'Ghi <b>lý do</b> (chỉ bạn và lãnh đạo từ PGĐ trở lên xem được).', 'Kiểm tra <b>số ngày</b> và người duyệt.', 'Chạm <b>Gửi đơn nghỉ</b>.'])))
 
 section('duyet', '5. Duyệt đơn (PGĐ, Giám đốc, Quản trị)', '''
 <p>Tab <b>Duyệt</b> chỉ hiện với người có quyền duyệt; số đỏ là số đơn đang chờ. Mỗi đơn kèm số ngày người đó đã nghỉ trong năm để tham khảo.</p>

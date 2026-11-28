@@ -24,7 +24,7 @@ Ai duyệt đơn của ai:
 - Giám đốc và Quản trị → tự được duyệt.
 - Giám đốc và Quản trị luôn duyệt được mọi đơn.
 
-Lý do nghỉ chỉ hiện cho chính người nghỉ, người có quyền duyệt đơn đó và Giám đốc.
+Lý do nghỉ chỉ hiện cho chính người nghỉ và lãnh đạo từ Phó Giám đốc trở lên (Phó Giám đốc, Giám đốc, Quản trị).
 
 ## Dữ liệu và mật khẩu
 

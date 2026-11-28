@@ -7,7 +7,7 @@
  * Vai trò (cột VaiTro):
  *   Admin    – toàn quyền, tab Quản trị: nhân sự, phân quyền, đặt lại PIN, loại nghỉ, ngày lễ
  *   GiamDoc     – duyệt mọi đơn, đổi vai trò giữa Nhân viên, Trưởng/Phó phòng và Phó Giám đốc
- *   PGD         – duyệt đơn của nhân sự thuộc các phòng ghi ở cột PhuTrach (cách nhau bằng dấu ;)
+ *   PGD         – duyệt đơn của nhân sự thuộc các phòng ghi ở cột PhuTrach (cách nhau bằng dấu ;); xem lý do nghỉ của mọi người
  *   TruongPhong – Trưởng/Phó phòng: như nhân viên, được xem tổng kết của mọi người
  *   NhanVien    – cá nhân, chỉ xem lịch và tổng kết của mình (máy chủ không gửi đơn của người khác)
  * Không quản lý phép năm. Loại nghỉ (tab LoaiNghi): TinhNghi = Không cho loại không tính là nghỉ (VD: Công tác).
@@ -488,8 +488,10 @@ function canApprovePerson_(viewer, requester) {
   if (viewer.vaiTro === 'GiamDoc') return true;
   return isStaffRole_(requester) && covers_(viewer, requester.phong);
 }
+/** Lý do nghỉ: chính người nghỉ và lãnh đạo từ Phó Giám đốc trở lên (PGĐ, Giám đốc, Quản trị) */
+var REASON_ROLES = ['PGD', 'GiamDoc', 'Admin'];
 function canSeeReasonPerson_(viewer, requester) {
-  return !!viewer && !!requester && (viewer.ma === requester.ma || viewer.vaiTro === 'GiamDoc' || canApprovePerson_(viewer, requester));
+  return !!viewer && !!requester && (viewer.ma === requester.ma || REASON_ROLES.indexOf(viewer.vaiTro) >= 0);
 }
 
 function personOf_(ctx, ma) {

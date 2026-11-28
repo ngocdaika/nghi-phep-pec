@@ -131,8 +131,9 @@
     if (viewer.vaiTro === 'GiamDoc') return true;
     return isStaffRole(requester) && covers(viewer, requester.phong);
   }
+  /** Lý do nghỉ: chính người nghỉ và lãnh đạo từ Phó Giám đốc trở lên (giống Code.gs) */
   function canSeeReason(viewer, requester) {
-    return !!viewer && !!requester && (viewer.ma === requester.ma || viewer.vaiTro === 'GiamDoc' || canApprove(viewer, requester));
+    return !!viewer && !!requester && (viewer.ma === requester.ma || ['PGD', 'GiamDoc', 'Admin'].indexOf(viewer.vaiTro) >= 0);
   }
 
   global.Logic = {

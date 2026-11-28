@@ -454,7 +454,7 @@
       '<div class="seg-ctl" data-seg="tuBuoi"><button type="button" class="' + (f.tuBuoi === 'Sáng' ? 'on' : '') + '" data-v="Sáng">Từ sáng</button><button type="button" class="' + (f.tuBuoi === 'Chiều' ? 'on' : '') + '" data-v="Chiều">Từ chiều</button></div></div>');
     h.push('<div><label>Đến ngày<input type="date" name="denNgay" value="' + f.denNgay + '" required></label>' +
       '<div class="seg-ctl" data-seg="denBuoi"><button type="button" class="' + (f.denBuoi === 'Sáng' ? 'on' : '') + '" data-v="Sáng">Hết buổi sáng</button><button type="button" class="' + (f.denBuoi === 'Chiều' ? 'on' : '') + '" data-v="Chiều">Hết buổi chiều</button></div></div>');
-    h.push('<label class="full">Lý do / ghi chú<textarea name="lyDo" rows="3" maxlength="500" placeholder="Chỉ bạn, người duyệt và quản trị viên xem được">' + esc(f.lyDo) + '</textarea></label>');
+    h.push('<label class="full">Lý do / ghi chú<textarea name="lyDo" rows="3" maxlength="500" placeholder="Chỉ bạn và lãnh đạo (Phó Giám đốc trở lên) xem được">' + esc(f.lyDo) + '</textarea></label>');
     h.push('<div class="full preview" id="formPreview"></div>');
     h.push('<div class="full"><button class="btn primary block" type="submit" id="submitLeave">Gửi đơn nghỉ</button></div>');
     h.push('</form></div>');
