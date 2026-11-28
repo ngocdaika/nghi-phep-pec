@@ -1,12 +1,14 @@
 """Tạo dữ liệu ban đầu cho Google Sheet từ danh sách nhân sự Excel.
 
-Đọc danh sách (STT | Họ và tên | Chức danh, có dòng tiêu đề phòng dạng I, II, ...), gán Mã NV và PIN ngẫu nhiên.
+Đọc danh sách (STT | Họ và tên | Chức danh, có dòng tiêu đề phòng dạng I, II, ...).
+Mã NV dạng tên.họđệm (Nguyễn Hoàng Khánh Ngọc → ngoc.nhk), mật khẩu mặc định 123456 (bắt buộc đổi khi đăng nhập lần đầu).
+Tài khoản admin có mật khẩu ngẫu nhiên.
 Kết quả nằm trong thư mục private/ (đã chặn trong .gitignore, KHÔNG đưa lên GitHub):
   - Seed.gs                      (PIN đã mã hóa) dán vào Apps Script (cùng Code.gs), chạy setup() để nạp dữ liệu, rồi xóa file này
-  - Danh sach PIN nhan su.xlsx   danh sách Mã NV + PIN để phát riêng cho từng người
+  - Danh sach PIN nhan su.xlsx   danh sách Mã NV (+ mật khẩu admin) để phát cho từng người
 
 Vai trò mặc định: Giám đốc Trung tâm = GiamDoc; Phó Giám đốc = PGD (chưa giao phòng — giao trong tab Quản trị);
-Trưởng phòng / Phó Trưởng phòng / Trưởng bộ phận = TruongPhong; còn lại = NhanVien. Thêm tài khoản ADMIN (quản trị, không thuộc phòng nào nên không hiện trên lịch).
+Trưởng phòng / Phó Trưởng phòng / Trưởng bộ phận = TruongPhong; còn lại = NhanVien. Thêm tài khoản admin (quản trị, không thuộc phòng nào nên không hiện trên lịch).
 
 Chạy:  python tools/tao_du_lieu_ban_dau.py "PEC_Danh sach nhan su.xlsx"
 """
@@ -16,6 +18,7 @@ import json
 import os
 import secrets
 import sys
+import unicodedata
 
 import openpyxl
 from openpyxl.styles import Font, PatternFill
@@ -43,6 +46,25 @@ NGAY_LE = [
     ('2027-04-30', 'Ngày Giải phóng miền Nam'), ('2027-05-01', 'Quốc tế Lao động'),
     ('2027-09-02', 'Quốc khánh'), ('2027-09-03', 'Quốc khánh (dự kiến)'),
 ]
+
+DEFAULT_PIN = '123456'
+
+
+def bo_dau(s):
+    s = s.replace('đ', 'd').replace('Đ', 'D')
+    return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+
+
+def tao_ma(ten, taken):
+    """Giống makeMa_() trong Code.gs: tên + '.' + chữ đầu họ và tên đệm, trùng thì thêm 2, 3…"""
+    w = ''.join(c if c.isalnum() else ' ' for c in bo_dau(ten).lower()).split() or ['nv']
+    base = w[-1] + ('.' + ''.join(x[0] for x in w[:-1]) if len(w) > 1 else '')
+    ma, i = base, 2
+    while ma in taken:
+        ma, i = base + str(i), i + 1
+    taken.add(ma)
+    return ma
+
 
 ROMAN = {'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'}
 
@@ -72,8 +94,9 @@ def doc_nhan_su(path):
 
 
 def gan_vai_tro(people):
-    for i, p in enumerate(people, 1):
-        p['ma'] = 'NS%02d' % i
+    taken = {'admin'}
+    for p in people:
+        p['ma'] = tao_ma(p['ten'], taken)
         c = p['chuc'].lower()
         if c == 'giám đốc trung tâm':
             p['vaitro'] = 'GiamDoc'
@@ -87,8 +110,8 @@ def gan_vai_tro(people):
 
 
 def hash_pin(salt, ma, pin):
-    """Giống hashPin_() trong Code.gs: 'h1$' + base64(SHA-256(salt|MA|pin))"""
-    return 'h1$' + base64.b64encode(hashlib.sha256(('%s|%s|%s' % (salt, ma, pin)).encode('utf-8')).digest()).decode()
+    """Giống hashPin_() trong Code.gs: 'h1$' + base64(SHA-256(salt|MÃ VIẾT HOA|pin))"""
+    return 'h1$' + base64.b64encode(hashlib.sha256(('%s|%s|%s' % (salt, ma.upper(), pin)).encode('utf-8')).digest()).decode()
 
 
 def pin_moi(used):
@@ -101,11 +124,10 @@ def pin_moi(used):
 
 def main(src, out_dir='private'):
     people = gan_vai_tro(doc_nhan_su(src))
-    people.insert(0, {'ma': 'ADMIN', 'ten': 'Quản trị hệ thống', 'phong': '', 'chuc': 'Quản trị', 'vaitro': 'Admin'})
-    used = set()
+    people.insert(0, {'ma': 'admin', 'ten': 'Quản trị hệ thống', 'phong': '', 'chuc': 'Quản trị', 'vaitro': 'Admin'})
     salt = secrets.token_hex(32)
     for p in people:
-        p['pin'] = pin_moi(used)
+        p['pin'] = pin_moi(set()) if p['vaitro'] == 'Admin' else DEFAULT_PIN
 
     seed = {
         'PIN_SALT': salt,
@@ -124,7 +146,7 @@ def main(src, out_dir='private'):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = 'PIN'
-    ws.append(['Mã NV', 'Họ tên', 'Phòng', 'Chức danh', 'Vai trò', 'PIN'])
+    ws.append(['Mã NV', 'Họ tên', 'Phòng', 'Chức danh', 'Vai trò', 'Mật khẩu ban đầu'])
     bold, fill = Font(bold=True, color='FFFFFF'), PatternFill('solid', fgColor='0093DD')
     for c in ws[1]:
         c.font, c.fill = bold, fill
@@ -134,7 +156,7 @@ def main(src, out_dir='private'):
     for row in ws.iter_rows(min_row=2, min_col=6, max_col=6):
         for c in row:
             c.number_format = '@'
-    for i, w in enumerate([9, 28, 36, 24, 14, 10]):
+    for i, w in enumerate([12, 28, 36, 24, 14, 16]):
         ws.column_dimensions[openpyxl.utils.get_column_letter(i + 1)].width = w
     pin_path = os.path.join(out_dir, 'Danh sach PIN nhan su.xlsx')
     wb.save(pin_path)
