@@ -16,7 +16,7 @@ Dashboard nghỉ phép cho Trung tâm. Nhân sự tự khai ngày nghỉ, lãnh 
 | `GiamDoc` – Giám đốc | Duyệt mọi đơn. Đổi vai trò giữa Nhân viên, Trưởng/Phó phòng và Phó Giám đốc (giao phòng phụ trách). |
 | `PGD` – Phó Giám đốc | Duyệt đơn của nhân sự thuộc các phòng ghi ở cột `PhuTrach` (cách nhau bằng dấu `;`). |
 | `TruongPhong` – Trưởng/Phó phòng | Như Nhân viên, nhưng được xem tổng kết tháng/năm của mọi người. |
-| `NhanVien` – Nhân viên | Khai đơn, hủy đơn đang chờ duyệt, xem lịch cả đơn vị, chỉ xem tổng kết của chính mình, đổi mật khẩu. |
+| `NhanVien` – Nhân viên | Khai đơn, hủy đơn đang chờ duyệt, đổi mật khẩu. Chỉ xem lịch và tổng kết của chính mình (máy chủ không gửi đơn của người khác). |
 
 Ai duyệt đơn của ai:
 - Nhân viên, Trưởng/Phó phòng → PGĐ phụ trách phòng đó. Phòng chưa giao PGĐ → Giám đốc.

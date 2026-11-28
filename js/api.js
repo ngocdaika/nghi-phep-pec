@@ -266,6 +266,7 @@
           types: db.types, holidays: db.holidays,
           requests: db.requests.filter(function (r) {
             if (r.trangThai === ST.CANCELLED) return false;
+            if (me.vaiTro === 'NhanVien' && r.ma !== me.ma) return false;
             if (r.trangThai === ST.REJECTED) return r.ma === me.ma || canApprove(r);
             return true;
           }).map(function (r) {

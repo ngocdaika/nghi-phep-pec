@@ -9,7 +9,7 @@
  *   GiamDoc     – duyệt mọi đơn, đổi vai trò giữa Nhân viên, Trưởng/Phó phòng và Phó Giám đốc
  *   PGD         – duyệt đơn của nhân sự thuộc các phòng ghi ở cột PhuTrach (cách nhau bằng dấu ;)
  *   TruongPhong – Trưởng/Phó phòng: như nhân viên, được xem tổng kết của mọi người
- *   NhanVien    – cá nhân, chỉ xem tổng kết của mình
+ *   NhanVien    – cá nhân, chỉ xem lịch và tổng kết của mình (máy chủ không gửi đơn của người khác)
  * Không quản lý phép năm. Loại nghỉ (tab LoaiNghi): TinhNghi = Không cho loại không tính là nghỉ (VD: Công tác).
  * Mã nhân sự dạng tên.họđệm viết thường (VD: Nguyễn Hoàng Khánh Ngọc → ngoc.nhk), trùng thì thêm số (ngoc.nhk2).
  * Mật khẩu mặc định 123456; đăng nhập bằng mật khẩu mặc định thì bắt buộc đổi ngay, chưa đổi thì không xem được gì.
@@ -499,8 +499,10 @@ function getData_(ctx) {
     if (manage) o.chuaDoiMK = s.pin === '' || s.pin === DEFAULT_PIN || s.pin === hashPin_(s.ma, DEFAULT_PIN);
     return o;
   });
+  var onlyMine = ctx.me.vaiTro === 'NhanVien'; // Nhân viên chỉ nhận đơn của chính mình (không xem ai nghỉ ngày nào)
   var reqs = requests_().filter(function (r) {
     if (r.trangThai === ST.CANCELLED) return false;
+    if (onlyMine && r.ma !== ctx.me.ma) return false;
     if (r.trangThai === ST.REJECTED) return r.ma === ctx.me.ma || canApprove_(ctx, r);
     return true;
   }).map(function (r) {

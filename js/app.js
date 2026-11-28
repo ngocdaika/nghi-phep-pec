@@ -202,7 +202,9 @@
   /* ---------------- Lịch tháng ---------------- */
   function renderCalendar() {
     var y = S.y, m = S.m, n = L.daysInMonth(y, m), today = L.todayYMD();
-    var staff = filteredStaff();
+    // Nhân viên chỉ xem lịch của chính mình (máy chủ cũng không gửi đơn của người khác)
+    var mineOnly = S.me.vaiTro === 'NhanVien';
+    var staff = mineOnly ? [person(S.me.ma) || S.me] : filteredStaff();
     var h = [];
 
     h.push('<div class="toolbar">',
@@ -210,7 +212,7 @@
       '<h2>Tháng ' + m + '/' + y + '</h2>',
       '<button class="btn icon" data-act="next" aria-label="Tháng sau">▶</button>',
       '<button class="btn" data-act="thisMonth">Hôm nay</button>',
-      '<span class="spacer"></span>', phongSelect('calPhong'),
+      '<span class="spacer"></span>', mineOnly ? '' : phongSelect('calPhong'),
       '<button class="btn primary" data-goto="form">+ Khai nghỉ</button>',
       '</div>');
 
@@ -232,8 +234,8 @@
     var myPend = S.requests.filter(function (r) { return r.ma === S.me.ma && r.trangThai === ST.PENDING; }).length;
     var myY = L.yearTotals(S.index, S.me.ma, y);
 
-    h.push('<div class="stats">');
-    h.push('<div class="stat accent"><div class="k">Hôm nay vắng mặt</div><div class="v">' + todayList.length + ' <small>người</small></div><div class="names">' +
+    h.push('<div class="stats' + (mineOnly ? ' three' : '') + '">');
+    if (!mineOnly) h.push('<div class="stat accent"><div class="k">Hôm nay vắng mặt</div><div class="v">' + todayList.length + ' <small>người</small></div><div class="names">' +
       (todayList.length ? todayList.map(function (o) {
         return '<button class="person-chip' + (o.x.req.trangThai === ST.PENDING ? ' pending' : '') + '" data-req="' + esc(o.x.req.id) + '"><span class="dot" style="background:' + colorOf(o.x.req.loai) + '"></span>' +
           esc(o.s.ten) + ' <em>' + esc(o.x.req.loai) + (o.x.part !== 'full' ? ', ' + (o.x.part === 'am' ? 'sáng' : 'chiều') : '') + '</em></button>';
@@ -315,7 +317,7 @@
       '<span><i class="dot" style="background:var(--hol)"></i>Ngày lễ</span></div>');
 
     // Danh sách theo ngày
-    h.push('<div class="card daylist"><h2>Ai nghỉ ngày nào – Tháng ' + m + '/' + y + '</h2>');
+    h.push('<div class="card daylist"><h2>' + (mineOnly ? 'Ngày nghỉ của tôi' : 'Ai nghỉ ngày nào') + ' – Tháng ' + m + '/' + y + '</h2>');
     var any = false;
     for (var d3 = 1; d3 <= n; d3++) {
       var s3 = L.ymd(y, m, d3), items = [];
@@ -333,7 +335,7 @@
             (o.x.req.trangThai === ST.PENDING ? ', chờ duyệt' : '') + '</em></button>';
         }).join('') + '</div></div>');
     }
-    if (!any) h.push('<div class="empty">Tháng này chưa có ai đăng ký nghỉ.</div>');
+    if (!any) h.push('<div class="empty">' + (mineOnly ? 'Tháng này bạn chưa đăng ký nghỉ.' : 'Tháng này chưa có ai đăng ký nghỉ.') + '</div>');
     h.push('</div>');
 
     $('view-calendar').innerHTML = h.join('');
@@ -562,7 +564,7 @@
       '<th>Tổng nghỉ</th><th>Chờ duyệt</th></tr></thead><tbody>');
     var last = null;
     rows.forEach(function (o) {
-      if (all() && o.s.phong !== last) { last = o.s.phong; h.push('<tr class="grp"><td colspan="' + (types.length + 3) + '">' + esc(last) + '</td></tr>'); }
+      if (all() && o.s.phong !== last) { last = o.s.phong; h.push('<tr class="grp"><td colspan="' + (types.length + 3) + '"><span class="grp-label">' + esc(last) + '</span></td></tr>'); }
       h.push('<tr><td><a href="#" data-person="' + esc(o.s.ma) + '" style="color:inherit;text-decoration:none">' + esc(o.s.ten) + '</a></td>' +
         types.map(function (k) { var v = typeDays(o.t, k, mi); return '<td' + (v ? '' : ' class="zero"') + '>' + L.fmtNum(v) + '</td>'; }).join('') +
         '<td class="tot">' + L.fmtNum(o.t.months[mi]) + '</td><td' + (o.pend ? ' style="color:var(--warn);font-weight:600"' : ' class="zero"') + '>' + L.fmtNum(o.pend) + '</td></tr>');
@@ -609,7 +611,7 @@
       '<th>Chờ duyệt</th></tr></thead><tbody>');
     var last = null, cols = 15 + types.length;
     rows.forEach(function (o) {
-      if (all() && o.s.phong !== last) { last = o.s.phong; h.push('<tr class="grp"><td colspan="' + cols + '">' + esc(last) + '</td></tr>'); }
+      if (all() && o.s.phong !== last) { last = o.s.phong; h.push('<tr class="grp"><td colspan="' + cols + '"><span class="grp-label">' + esc(last) + '</span></td></tr>'); }
       h.push('<tr><td><a href="#" data-person="' + esc(o.s.ma) + '" style="color:inherit;text-decoration:none">' + esc(o.s.ten) + '</a></td>' +
         o.t.months.map(function (v) { return '<td' + (v ? '' : ' class="zero"') + '>' + L.fmtNum(v) + '</td>'; }).join('') +
         '<td class="tot">' + L.fmtNum(o.t.total) + '</td>' +
@@ -991,6 +993,25 @@
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden && S.me && Date.now() - S.lastLoad > 120000) loadData(true);
   });
+
+  /* ---------------- Bảng: kéo ngang trong khung, kéo dọc cuộn cả trang ----------------
+     Khung bảng chỉ cuộn ngang nên mỗi lần vuốt chỉ đi một hướng. Dòng tiêu đề (ngày, cột) được đẩy xuống
+     theo trang để luôn nằm ngay dưới thanh trên cùng. */
+  var headTick = 0;
+  function stickHeads() {
+    headTick = 0;
+    var top = document.querySelector('.topbar').getBoundingClientRect().bottom;
+    Array.prototype.forEach.call(document.querySelectorAll('.grid-wrap > table, .tbl-wrap > table'), function (t) {
+      if (!t.tHead || !t.offsetParent) return;
+      var r = t.getBoundingClientRect(), hh = t.tHead.offsetHeight, foot = t.tFoot ? t.tFoot.offsetHeight : 0;
+      var dy = Math.max(0, Math.min(top - r.top, r.height - hh - foot));
+      t.style.setProperty('--hy', dy + 'px');
+    });
+  }
+  function queueHeads() { if (!headTick) headTick = requestAnimationFrame(stickHeads); }
+  window.addEventListener('scroll', queueHeads, { passive: true });
+  window.addEventListener('resize', queueHeads);
+  new MutationObserver(queueHeads).observe($('main'), { childList: true, subtree: true });
 
   /* ---------------- Khởi động ---------------- */
   // "Trung tâm PEC – Portcoast": trên điện thoại ẩn phần sau dấu – (logo đã có chữ Portcoast)

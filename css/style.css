@@ -382,3 +382,18 @@ table.sum-tbl { border-collapse: separate; border-spacing: 0; width: 100%; font-
   .unit-sfx { display: none; }
   .user-chip { max-width: 34vw; }
 }
+
+/* Cập nhật v8: bảng chỉ kéo ngang trong khung, kéo dọc là cuộn cả trang (không kéo chéo cùng lúc).
+   Dòng tiêu đề bảng bám đầu màn hình bằng JS (biến --hy), cột họ tên và tên phòng bám mép trái. */
+.grid-wrap, .tbl-wrap { overflow-x: auto; overflow-y: hidden; max-height: none; min-height: 0; overscroll-behavior-x: contain; }
+.cal thead th, .sum-tbl thead th { transform: translateY(var(--hy, 0px)); }
+.cal tr.grp td .grp-label, .sum-tbl tr.grp .grp-label { display: inline-block; position: sticky; left: 10px; z-index: 1; }
+.sum-tbl tr.grp td { position: static; }
+.stats.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1100px) {
+  .stats.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats.three .stat:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .grid-wrap { max-height: none; }
+}
