@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" href="assets/icon.png">
   <link rel="apple-touch-icon" href="assets/icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
   <header class="topbar">
@@ -38,16 +38,33 @@
       <img src="assets/logo.png" alt="Portcoast" class="login-logo">
       <h1>Lịch nghỉ phép</h1>
       <p class="muted" id="loginUnit"></p>
-      <label>Mã nhân viên
-        <input name="ma" id="loginMa" autocomplete="username" autocapitalize="characters" required placeholder="VD: NS05">
+      <label>Mã nhân sự
+        <input name="ma" id="loginMa" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required placeholder="VD: ngoc.nhk">
       </label>
-      <label>Mã PIN
-        <input name="pin" id="loginPin" type="password" inputmode="numeric" autocomplete="current-password" required placeholder="••••••">
+      <label>Mật khẩu
+        <input name="pin" id="loginPin" type="password" autocomplete="current-password" required placeholder="••••••">
       </label>
+      <label class="ck remember"><input type="checkbox" id="loginRemember"> Giữ đăng nhập 30 ngày</label>
       <button class="btn primary block" type="submit" id="loginBtn">Đăng nhập</button>
       <p class="err" id="loginErr"></p>
-      <p class="muted small">Chưa có mã? Liên hệ quản trị viên của Trung tâm.</p>
+      <p class="muted small" id="loginHint">Mã nhân sự: tên + chữ đầu họ và tên đệm, không dấu (Nguyễn Hoàng Khánh Ngọc → ngoc.nhk). Lần đầu dùng mật khẩu 123456.</p>
       <div id="demoRoles" class="demo-roles" hidden></div>
+    </form>
+    <form class="login-card" id="firstPinForm" autocomplete="on" hidden>
+      <img src="assets/logo.png" alt="Portcoast" class="login-logo">
+      <h1>Đổi mật khẩu</h1>
+      <p class="muted" id="firstPinWho"></p>
+      <p class="small">Bạn đang dùng mật khẩu mặc định. Hãy đặt mật khẩu riêng (6–32 ký tự) trước khi sử dụng.</p>
+      <input type="text" name="username" id="firstPinUser" autocomplete="username" hidden>
+      <label>Mật khẩu mới
+        <input name="p1" type="password" autocomplete="new-password" required minlength="6" maxlength="32">
+      </label>
+      <label>Nhập lại mật khẩu mới
+        <input name="p2" type="password" autocomplete="new-password" required minlength="6" maxlength="32">
+      </label>
+      <button class="btn primary block" type="submit" id="firstPinBtn">Đổi mật khẩu và vào</button>
+      <p class="err" id="firstPinErr"></p>
+      <button class="btn block" type="button" data-act="cancelFirst">Quay lại</button>
     </form>
   </div>
 
@@ -60,9 +77,9 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <script src="js/config.js?v=5"></script>
-  <script src="js/logic.js?v=5"></script>
-  <script src="js/api.js?v=5"></script>
-  <script src="js/app.js?v=5"></script>
+  <script src="js/config.js?v=7"></script>
+  <script src="js/logic.js?v=7"></script>
+  <script src="js/api.js?v=7"></script>
+  <script src="js/app.js?v=7"></script>
 </body>
 </html>

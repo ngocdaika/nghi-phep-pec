@@ -92,36 +92,65 @@
   function pendingForMe() { return S.requests.filter(function (r) { return r.canApprove && r.trangThai === ST.PENDING; }); }
 
   /* ---------------- Đăng nhập & dữ liệu ---------------- */
-  function saveAuth(a) { S.auth = a; if (a) localStorage.setItem(AUTH_KEY, JSON.stringify(a)); else localStorage.removeItem(AUTH_KEY); }
-  function loadAuth() { try { return JSON.parse(localStorage.getItem(AUTH_KEY)); } catch (e) { return null; } }
+  /* Trình duyệt chỉ giữ mã phiên do máy chủ cấp (không lưu mật khẩu).
+     "Giữ đăng nhập 30 ngày" → localStorage; không chọn → sessionStorage (đóng trình duyệt là thoát). */
+  function saveAuth(a) {
+    S.auth = a;
+    try { localStorage.removeItem(AUTH_KEY); sessionStorage.removeItem(AUTH_KEY); } catch (e) { /* bỏ qua */ }
+    if (a) (a.remember ? localStorage : sessionStorage).setItem(AUTH_KEY, JSON.stringify(a));
+  }
+  function loadAuth() {
+    var a = null;
+    try { a = JSON.parse(sessionStorage.getItem(AUTH_KEY) || localStorage.getItem(AUTH_KEY)); } catch (e) { a = null; }
+    if (!a || !a.token || !(a.exp > Date.now())) { saveAuth(null); return null; } // bản cũ lưu Mã + PIN → bỏ, đăng nhập lại
+    return a;
+  }
+  function authFrom(res, remember) {
+    return { token: res.token, exp: res.exp, remember: !!remember, ma: res.me ? res.me.ma : '' };
+  }
 
+  var pendingFirst = null; // { ma, pin, remember } khi phải đổi mật khẩu mặc định
   function showLogin(msg) {
     $('login').hidden = false;
+    $('loginForm').hidden = false;
+    $('firstPinForm').hidden = true;
+    pendingFirst = null;
     $('userChip').hidden = true;
     $('loginErr').textContent = msg || '';
     setTimeout(function () { $('loginMa').focus(); }, 50);
+  }
+  function showFirstPin(me) {
+    $('loginForm').hidden = true;
+    $('firstPinForm').hidden = false;
+    $('firstPinForm').reset();
+    $('firstPinWho').textContent = me.ten + ' · ' + me.ma;
+    $('firstPinUser').value = me.ma;
+    $('firstPinErr').textContent = '';
+    setTimeout(function () { $('firstPinForm').elements.p1.focus(); }, 50);
   }
 
   /* ---------------- Bản demo: chuyển vai trò ---------------- */
   function renderDemoBar() {
     if (!Api.demo) return;
     var cur = S.auth && S.auth.ma;
-    var btns = Api.demoAs.map(function (o) {
+    var btns = Api.demoAs().map(function (o) {
       return '<button type="button" class="role-btn' + (o.ma === cur ? ' on' : '') + '" data-demo-as="' + o.ma + '">' + esc(o.label) + '</button>';
     }).join('');
     $('demoBanner').innerHTML = '<span class="demo-tag">DEMO</span><span class="demo-lbl">Xem với vai trò:</span><div class="role-btns">' + btns + '</div>';
     $('demoRoles').innerHTML = '<div class="small muted" style="margin:14px 0 8px">Bản demo – chọn vai trò để xem giao diện</div><div class="role-btns">' + btns + '</div>';
     $('demoRoles').hidden = false;
+    $('loginHint').textContent = 'Bản demo: nhập mã nhân sự bất kỳ (VD: ngoc.nhk) và mật khẩu bất kỳ. Mã không có trong danh sách sẽ vào bằng Quản trị. Nhập mật khẩu 123456 để thử màn hình đổi mật khẩu lần đầu.' +
+      (Api.fromSheet() ? ' Danh sách nhân sự lấy từ Google Sheet; các đơn nghỉ là giả định.' : '');
   }
   function demoSwitch(ma) {
-    saveAuth({ ma: ma, pin: Api.demoPin });
+    saveAuth({ token: Api.demoToken(ma), exp: Date.now() + 30 * 86400000, remember: true, ma: ma });
     S.form = null; S.phong = '';
     closeModal();
     loadData().then(function () { renderDemoBar(); if (S.me) toast('Đang xem với vai trò ' + (L.ROLES[S.me.vaiTro] || '') + ': ' + S.me.ten); });
   }
 
   function call(action, extra) {
-    var p = { action: action, ma: S.auth.ma, pin: S.auth.pin };
+    var p = { action: action, token: S.auth.token };
     for (var k in extra) p[k] = extra[k];
     return Api.call(p);
   }
@@ -142,7 +171,7 @@
       renderTabs();
       show(S.view);
     }).catch(function (e) {
-      if (/PIN|Mã NV/.test(e.message)) { saveAuth(null); showLogin(e.message); }
+      if (/Phiên đăng nhập|mật khẩu|Mã NV/.test(e.message)) { saveAuth(null); S.me = null; showLogin(e.message); }
       else toast(e.message, true);
     });
   }
@@ -663,10 +692,13 @@
       '<div><b>' + L.fmtNum(yt.ct) + '</b><span>Ngày công tác năm ' + y + '</span></div>' +
       '<div><b>' + L.fmtNum(yt.pending) + '</b><span>Ngày chờ duyệt</span></div></div></div>' +
       '<div class="card"><h2>Đơn nghỉ của tôi</h2>' + (mine.length ? mine.map(function (r) { return reqBlock(r, { noName: true }); }).join('') : '<div class="empty">Bạn chưa có đơn nghỉ nào.</div>') + '</div>' +
-      '<div class="card"><h2>Đổi mã PIN</h2><form id="pinForm" class="form-grid">' +
-      '<label>PIN mới (6–8 chữ số)<input type="password" inputmode="numeric" name="p1" autocomplete="new-password" required></label>' +
-      '<label>Nhập lại PIN mới<input type="password" inputmode="numeric" name="p2" autocomplete="new-password" required></label>' +
-      '<div class="full"><button class="btn primary" type="submit">Đổi PIN</button></div></form></div>' +
+      '<div class="card"><h2>Đổi mật khẩu</h2><form id="pinForm" class="form-grid">' +
+      '<input type="text" name="username" autocomplete="username" value="' + esc(me.ma) + '" hidden>' +
+      '<label class="full">Mật khẩu hiện tại<input type="password" name="p0" autocomplete="current-password" required></label>' +
+      '<label>Mật khẩu mới (6–32 ký tự)<input type="password" name="p1" autocomplete="new-password" required minlength="6" maxlength="32"></label>' +
+      '<label>Nhập lại mật khẩu mới<input type="password" name="p2" autocomplete="new-password" required minlength="6" maxlength="32"></label>' +
+      '<div class="full small muted">Đổi mật khẩu xong, các máy khác đang đăng nhập tài khoản này sẽ phải đăng nhập lại.</div>' +
+      '<div class="full"><button class="btn primary" type="submit">Đổi mật khẩu</button></div></form></div>' +
       '<div class="card" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="refresh">↻ Tải lại dữ liệu</button><button class="btn bad" data-act="logout">Đăng xuất</button>' +
       (Api.demo ? '<button class="btn" data-act="resetDemo">Đặt lại dữ liệu demo</button>' : '') + '</div>';
   }
@@ -704,7 +736,7 @@
       h.push('<tr' + (s.trangThai === 'Nghỉ việc' ? ' class="off"' : '') + '><td>' + esc(s.ten) + '<div class="small muted">' + esc(s.chucDanh) + '</div></td>' +
         '<td>' + esc(s.ma) + '</td><td>' + roleChip(s.vaiTro) + '</td><td>' + esc(s.phong || '—') + '</td>' +
         '<td class="wrap">' + esc(s.vaiTro === 'PGD' ? (L.phuTrachList(s).join(', ') || 'chưa giao') : '') + '</td>' +
-        '<td>' + esc(s.trangThai) + '</td>' +
+        '<td>' + esc(s.trangThai) + (s.chuaDoiMK && s.trangThai !== 'Nghỉ việc' ? '<div class="tag-warn" title="Còn dùng mật khẩu mặc định 123456 – chưa đăng nhập lần nào">Chưa đổi MK</div>' : '') + '</td>' +
         '<td>' + (editable ? '<button class="btn" data-edit-staff="' + esc(s.ma) + '">Sửa</button>' : '') + '</td></tr>');
     });
     h.push('</tbody></table></div></div>');
@@ -743,7 +775,7 @@
     var roles = isAdmin ? ['NhanVien', 'TruongPhong', 'PGD', 'GiamDoc', 'Admin'] : GD_ROLES;
     var scope = L.phuTrachList(s);
     openModal('<h3>' + (isNew ? 'Thêm nhân sự' : 'Tài khoản ' + esc(s.ten)) + '</h3><form id="staffForm" class="form-grid" data-new="' + (isNew ? 1 : 0) + '">' +
-      '<label>Mã NV<input name="ma" value="' + esc(s.ma) + '"' + (isNew ? ' required maxlength="20" placeholder="VD: NS41"' : ' readonly') + '></label>' +
+      '<label>Mã nhân sự<input name="ma" value="' + esc(s.ma) + '"' + (isNew ? ' maxlength="30" autocapitalize="none" placeholder="Để trống: tự tạo (VD: ngoc.nhk)"' : ' readonly') + '></label>' +
       '<label>Họ tên<input name="ten" value="' + esc(s.ten) + '" required' + dis + '></label>' +
       '<label>Phòng<input name="phong" list="phongList" value="' + esc(s.phong) + '"' + dis + ' placeholder="Để trống: không hiện trên lịch"></label>' +
       '<datalist id="phongList">' + allPhong().map(function (p) { return '<option value="' + esc(p) + '">'; }).join('') + '</datalist>' +
@@ -757,20 +789,21 @@
         return '<label><input type="checkbox" name="phuTrach" value="' + esc(p) + '"' + (scope.indexOf(p) >= 0 ? ' checked' : '') + '> ' + esc(p) + '</label>';
       }).join('') + '</div></div>' +
       '<div class="full" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">' +
-      (isAdmin && !isNew ? '<button type="button" class="btn" data-reset-pin="' + esc(s.ma) + '" style="margin-right:auto">Đặt lại PIN</button>' : '') +
+      (isAdmin && !isNew ? '<button type="button" class="btn" data-reset-pin="' + esc(s.ma) + '" style="margin-right:auto">Đặt lại mật khẩu</button>' : '') +
       '<button type="button" class="btn" data-close>Thôi</button><button class="btn primary" type="submit">' + (isNew ? 'Tạo tài khoản' : 'Lưu') + '</button></div>' +
       '</form>');
   }
 
   function showPin(ten, ma, pin, title) {
-    openModal('<h3>' + esc(title) + '</h3><p>Mã NV <b>' + esc(ma) + '</b> – ' + esc(ten) + '</p><div class="pin-box">' + esc(pin) + '</div>' +
-      '<p class="small muted">Gửi riêng PIN này cho người dùng. PIN chỉ hiện một lần; hệ thống lưu dạng mã hóa nên không ai xem lại được. Người dùng nên đổi PIN ở tab Cá nhân.</p>' +
+    openModal('<h3>' + esc(title) + '</h3><p>Mã nhân sự <b>' + esc(ma) + '</b> – ' + esc(ten) + '</p><div class="pin-box">' + esc(pin) + '</div>' +
+      '<p class="small muted">Mật khẩu mặc định. Người dùng đăng nhập bằng mã trên + mật khẩu này và phải đổi mật khẩu ngay lần đầu. ' +
+      'Nhắc họ đăng nhập sớm: khi chưa đổi, ai biết mã cũng vào được.</p>' +
       '<div style="text-align:right"><button class="btn primary" data-close>Đã ghi lại</button></div>');
   }
 
   function submitStaff(f) {
     var isNew = f.getAttribute('data-new') === '1', el = f.elements;
-    var data = { ma: el.ma.value.trim().toUpperCase(), vaiTro: el.vaiTro.value,
+    var data = { ma: el.ma.value.trim().toLowerCase(), vaiTro: el.vaiTro.value,
                  phuTrach: Array.prototype.filter.call(f.querySelectorAll('input[name=phuTrach]'), function (c) { return c.checked; }).map(function (c) { return c.value; }) };
     if (S.me.isAdmin) {
       data.ten = el.ten.value; data.phong = el.phong.value; data.chucDanh = el.chucDanh.value;
@@ -779,8 +812,8 @@
     if (data.vaiTro === 'PGD' && !data.phuTrach.length && !confirm('Phó Giám đốc chưa được giao phòng nào. Vẫn lưu?')) return;
     call('saveStaff', { staff: data, isNew: isNew }).then(function (res) {
       return loadData(true).then(function () {
-        if (res.pin) showPin(data.ten, data.ma, res.pin, 'Đã tạo tài khoản');
-        else { closeModal(); toast('Đã lưu tài khoản ' + data.ma); }
+        if (res.pin) showPin(data.ten, res.saved || data.ma, res.pin, 'Đã tạo tài khoản');
+        else { closeModal(); toast('Đã lưu tài khoản ' + (res.saved || data.ma)); }
       });
     }).catch(function (e) { toast(e.message, true); });
   }
@@ -831,12 +864,15 @@
     if ((a = t.getAttribute('data-edit-staff'))) { staffForm(a); return; }
     if ((a = t.getAttribute('data-reset-pin'))) {
       var rp = person(a);
-      openModal('<h3>Đặt lại PIN cho ' + esc(rp.ten) + '?</h3><p class="muted">PIN cũ sẽ không dùng được nữa. Hệ thống tạo PIN mới 6 số để anh/chị gửi riêng cho người này.</p>' +
-        '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-close>Thôi</button><button class="btn primary" data-reset-pin-confirm="' + esc(a) + '">Đặt lại PIN</button></div>');
+      openModal('<h3>Đặt lại mật khẩu cho ' + esc(rp.ten) + '?</h3><p class="muted">Mật khẩu cũ không dùng được nữa, mọi máy đang đăng nhập tài khoản này bị thoát. Mật khẩu trở về mặc định 123456; người này phải đổi ngay khi đăng nhập.</p>' +
+        '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-close>Thôi</button><button class="btn primary" data-reset-pin-confirm="' + esc(a) + '">Đặt lại mật khẩu</button></div>');
       return;
     }
     if ((a = t.getAttribute('data-reset-pin-confirm'))) {
-      call('resetPin', { target: a }).then(function (res) { var p2 = person(res.ma); showPin(p2 ? p2.ten : '', res.ma, res.pin, 'PIN mới'); })
+      call('resetPin', { target: a }).then(function (res) {
+        var p2 = person(res.ma); showPin(p2 ? p2.ten : '', res.ma, res.pin, 'Đã đặt lại mật khẩu');
+        loadData(true);
+      })
         .catch(function (e) { toast(e.message, true); });
       return;
     }
@@ -863,6 +899,7 @@
         case 'csvList': csvList(); break;
         case 'refresh': loadData(true).then(function () { toast('Đã cập nhật'); }); break;
         case 'logout': saveAuth(null); S.me = null; S.form = null; S.view = 'calendar'; showLogin(); break;
+        case 'cancelFirst': showLogin(); break;
         case 'resetDemo': Api.resetDemo(); loadData(true).then(function () { toast('Đã đặt lại dữ liệu demo'); }); break;
       }
     }
@@ -910,21 +947,40 @@
     if (f.id === 'pinForm') {
       e.preventDefault();
       var p1 = f.elements.p1.value, p2 = f.elements.p2.value;
-      if (p1 !== p2) { toast('Hai lần nhập PIN không khớp', true); return; }
-      call('changePin', { newPin: p1 }).then(function () {
-        saveAuth({ ma: S.auth.ma, pin: p1 }); f.reset(); toast('Đã đổi PIN');
-      }).catch(function (err) { toast(err.message, true); });
+      if (p1 !== p2) { toast('Hai lần nhập mật khẩu mới không khớp', true); return; }
+      Api.call({ action: 'changePin', token: S.auth.token, oldPin: f.elements.p0.value, newPin: p1, remember: S.auth.remember }).then(function (res) {
+        saveAuth(authFrom(res, S.auth.remember)); f.reset(); toast('Đã đổi mật khẩu');
+      }).catch(function (err) {
+        if (/Phiên đăng nhập/.test(err.message)) { saveAuth(null); S.me = null; showLogin(err.message); }
+        else toast(err.message, true);
+      });
     }
     if (f.id === 'loginForm') {
       e.preventDefault();
-      var ma = $('loginMa').value.trim().toUpperCase(), pin = $('loginPin').value.trim(), btn = $('loginBtn');
+      var ma = $('loginMa').value.trim().toLowerCase(), pin = $('loginPin').value.trim(), btn = $('loginBtn');
+      var remember = $('loginRemember').checked;
       btn.disabled = true; btn.textContent = 'Đang đăng nhập…'; $('loginErr').textContent = '';
-      Api.call({ action: 'login', ma: ma, pin: pin }).then(function () {
-        saveAuth({ ma: ma, pin: pin });
+      Api.call({ action: 'login', ma: ma, pin: pin, remember: remember }).then(function (res) {
         $('loginPin').value = '';
+        if (res.mustChange) { pendingFirst = { ma: ma, pin: pin, remember: remember }; showFirstPin(res.me); return; }
+        saveAuth(authFrom(res, remember));
         return loadData();
       }).catch(function (err) { $('loginErr').textContent = err.message; })
         .then(function () { btn.disabled = false; btn.textContent = 'Đăng nhập'; });
+    }
+    if (f.id === 'firstPinForm') {
+      e.preventDefault();
+      var n1 = f.elements.p1.value, n2 = f.elements.p2.value, fb = $('firstPinBtn'), pf = pendingFirst;
+      if (!pf) { showLogin(); return; }
+      if (n1 !== n2) { $('firstPinErr').textContent = 'Hai lần nhập mật khẩu không khớp'; return; }
+      fb.disabled = true; $('firstPinErr').textContent = '';
+      Api.call({ action: 'changePin', ma: pf.ma, pin: pf.pin, newPin: n1, remember: pf.remember }).then(function (res) {
+        pendingFirst = null; f.reset();
+        saveAuth(authFrom(res, pf.remember));
+        toast('Đã đổi mật khẩu. Chào ' + (res.me ? res.me.ten : '') + '!');
+        return loadData();
+      }).catch(function (err) { $('firstPinErr').textContent = err.message; })
+        .then(function () { fb.disabled = false; });
     }
   });
 
@@ -937,12 +993,16 @@
   });
 
   /* ---------------- Khởi động ---------------- */
-  $('unitName').textContent = cfg.UNIT_NAME || '';
+  // "Trung tâm PEC – Portcoast": trên điện thoại ẩn phần sau dấu – (logo đã có chữ Portcoast)
+  var unitParts = String(cfg.UNIT_NAME || '').split(' – ');
+  $('unitName').innerHTML = esc(unitParts[0]) + (unitParts.length > 1 ? '<em class="unit-sfx"> – ' + esc(unitParts.slice(1).join(' – ')) + '</em>' : '');
   $('loginUnit').textContent = cfg.UNIT_NAME || '';
   $('demoBanner').hidden = !Api.demo;
-  renderDemoBar();
   var hv = location.hash.slice(1);
   if (VIEWS.some(function (x) { return x.id === hv; })) S.view = hv;
-  var saved = loadAuth();
-  if (saved && saved.ma && saved.pin) { S.auth = saved; loadData(); } else showLogin();
+  Api.ready.then(function () {
+    renderDemoBar();
+    var saved = loadAuth();
+    if (saved) { S.auth = saved; loadData(); } else showLogin();
+  });
 })();

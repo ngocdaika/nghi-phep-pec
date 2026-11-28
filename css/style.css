@@ -364,3 +364,21 @@ table.sum-tbl { border-collapse: separate; border-spacing: 0; width: 100%; font-
   .seg-ctl.mode { width: 100%; }
   .seg-ctl.mode button { flex: 1; }
 }
+
+/* Cập nhật v6: đăng nhập, tên Trung tâm trên điện thoại */
+.login-card label.remember { display: flex; align-items: center; gap: 8px; font-weight: 400; cursor: pointer; }
+.login-card label.remember input { width: 18px; height: 18px; margin: 0; }
+.login-card .btn.block + .err:empty { display: none; }
+.unit-sfx { font-style: normal; }
+.tag-warn { display: inline-block; font-size: 11px; font-weight: 600; color: #B45309; background: #FEF3C7; border-radius: 6px; padding: 1px 6px; margin-top: 2px; }
+@media (min-width: 761px) and (max-width: 1000px) {
+  .app-title span { display: block; }
+}
+@media (max-width: 760px) {
+  .brand { flex: 1 1 auto; }
+  .app-title { min-width: 0; }
+  .app-title strong { font-size: 14px; }
+  .app-title span { display: block; font-size: 11px; overflow: hidden; text-overflow: ellipsis; max-width: 46vw; }
+  .unit-sfx { display: none; }
+  .user-chip { max-width: 34vw; }
+}
